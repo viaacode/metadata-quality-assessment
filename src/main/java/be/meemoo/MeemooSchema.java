@@ -27,7 +27,7 @@ public class MeemooSchema implements Schema {
 
 
     public Format getFormat() {
-        return Format.XML;
+        return Format.JSON;
     }
 
     public List<FieldGroup> getFieldGroups() {
