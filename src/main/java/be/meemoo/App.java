@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.logging.Logger;
 import java.util.stream.Stream;
 
 /**
@@ -14,7 +15,9 @@ import java.util.stream.Stream;
  *
  */
 public class App {
-    public static void main( String[] args ) {
+    private static final Logger logger = Logger.getLogger(App.class.getCanonicalName());
+
+    public static void main(String[] args ) {
 
         CalculatorFacade calculator = new CalculatorFacade();
         MeemooSchema schema = new MeemooSchema();
@@ -39,6 +42,8 @@ public class App {
                     // save csv
                 } catch (InvalidJsonException e) {
                     // handle exception
+                    logger.severe(String.format("Invalid JSON in %s: %s. Error message: %s.",
+                            path.toString(), jsonRecord, e.getLocalizedMessage()));
                 }
             });
 

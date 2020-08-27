@@ -34,14 +34,53 @@ public class MeemooSchema implements Schema {
                 "$.['cp']",
                 Category.MANDATORY));
 
-        addPath(new JsonBranch("cp",
-                "$.['cp']",
+        addPath(new JsonBranch("cp_id",
+                "$.['cp_id']",
                 Category.MANDATORY));
 
         addPath(new JsonBranch("sp_id",
                 "$.['sp_id']",
                 Category.MANDATORY));
 
+        addPath(new JsonBranch("pid",
+                "$.['pid']",
+                Category.MANDATORY));
+
+        addPath(new JsonBranch("dc_description",
+                "$.['dc_description']",
+                Category.MANDATORY));
+
+        addPath(new JsonBranch("dc_format",
+                "$.['dc_format']",
+                Category.MANDATORY));
+
+        addPath(new JsonBranch("dc_publisher",
+                "$.['dc_publisher']",
+                Category.MANDATORY));
+
+        addPath(new JsonBranch("dc_source",
+                "$.['dc_source']",
+                Category.MANDATORY));
+
+        addPath(new JsonBranch("dc_terms",
+                "$.['dc_terms']",
+                Category.MANDATORY));
+
+        addPath(new JsonBranch("dc_title",
+                "$.['dc_title']",
+                Category.MANDATORY));
+
+        addPath(new JsonBranch("dcterms_abstract",
+                "$.['dcterms_abstract']",
+                Category.MANDATORY));
+
+        addPath(new JsonBranch("dcterms_abstract",
+                "$.['dcterms_abstract']",
+                Category.MANDATORY));
+
+        addPath(new JsonBranch("dcterms_created",
+                "$.['dcterms_issued']",
+                Category.MANDATORY));
     }
 
 
