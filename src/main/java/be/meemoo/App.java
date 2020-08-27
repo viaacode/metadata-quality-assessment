@@ -21,6 +21,7 @@ public class App {
         calculator.setSchema(schema);
 
         // do some configuration with the accessor of calculator Facade
+        calculator.enableCompletenessMeasurement(true);
         calculator.configure();
 
         try {

@@ -2,6 +2,7 @@ package be.meemoo;
 
 import de.gwdg.metadataqa.api.json.FieldGroup;
 import de.gwdg.metadataqa.api.json.JsonBranch;
+import de.gwdg.metadataqa.api.model.Category;
 import de.gwdg.metadataqa.api.schema.Format;
 import de.gwdg.metadataqa.api.schema.Schema;
 
@@ -21,7 +22,25 @@ public class MeemooSchema implements Schema {
     private static final Map<String, JsonBranch> COLLECTION_PATHS = new LinkedHashMap<String, JsonBranch>();
 
     static {
+        addPath(new JsonBranch("fragment_id_mam",
+                "$.['fragment_id_mam']",
+                Category.MANDATORY));
 
+        addPath(new JsonBranch("mediaobject_id_mam",
+                "$.['mediaobject_id_mam']",
+                Category.MANDATORY));
+
+        addPath(new JsonBranch("cp",
+                "$.['cp']",
+                Category.MANDATORY));
+
+        addPath(new JsonBranch("cp",
+                "$.['cp']",
+                Category.MANDATORY));
+
+        addPath(new JsonBranch("sp_id",
+                "$.['sp_id']",
+                Category.MANDATORY));
 
     }
 
