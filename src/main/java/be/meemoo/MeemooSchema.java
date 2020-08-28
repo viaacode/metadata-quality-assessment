@@ -20,6 +20,7 @@ public class MeemooSchema implements Schema {
     private static final List<String> EMPTY_STRINGS = new ArrayList<String>();
     private static final Map<String, JsonBranch> PATHS = new LinkedHashMap<String, JsonBranch>();
     private static final Map<String, JsonBranch> COLLECTION_PATHS = new LinkedHashMap<String, JsonBranch>();
+    private static List<Category> categories = new ArrayList<>();
 
     static {
         addPath(new JsonBranch("fragment_id_mam",
@@ -122,9 +123,13 @@ public class MeemooSchema implements Schema {
 
     private static void addPath(JsonBranch branch) {
         PATHS.put(branch.getLabel(), branch);
-        if (branch.isCollection()) {
+        if (branch.isCollection())
             COLLECTION_PATHS.put(branch.getLabel(), branch);
-        }
+
+        if (!branch.getCategories().isEmpty())
+            for (Category category : branch.getCategories())
+                if (!categories.contains(category))
+                    categories.add(category);
     }
 
     public List<JsonBranch> getPaths() {
@@ -137,5 +142,10 @@ public class MeemooSchema implements Schema {
 
     public JsonBranch getPathByLabel(String label) {
         return PATHS.get(label);
+    }
+
+    @Override
+    public List<Category> getCategories() {
+        return categories;
     }
 }
