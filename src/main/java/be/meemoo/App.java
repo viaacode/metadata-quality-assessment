@@ -2,6 +2,13 @@ package be.meemoo;
 
 import com.jayway.jsonpath.InvalidJsonException;
 import de.gwdg.metadataqa.api.calculator.CalculatorFacade;
+import de.gwdg.metadataqa.api.json.JsonBranch;
+import de.gwdg.metadataqa.api.model.Category;
+import de.gwdg.metadataqa.api.schema.BaseSchema;
+import de.gwdg.metadataqa.api.schema.CsvAwareSchema;
+import de.gwdg.metadataqa.api.schema.Format;
+import de.gwdg.metadataqa.api.schema.Schema;
+import de.gwdg.metadataqa.api.util.CsvReader;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -12,38 +19,58 @@ import java.util.stream.Stream;
 
 /**
  * Hello world!
- *
  */
 public class App {
     private static final Logger logger = Logger.getLogger(App.class.getCanonicalName());
 
-    public static void main(String[] args ) {
+    public static void main(String[] args) {
 
-        CalculatorFacade calculator = new CalculatorFacade();
-        MeemooSchema schema = new MeemooSchema();
-        calculator.setSchema(schema);
+        // Take input file
+        // Check how many arguments were passed in
+        if (args.length == 0) {
+            System.out.println("[csv file]");
+            System.exit(0);
+        }
+        String inputFile = args[0];
 
-        // do some configuration with the accessor of calculator Facade
-        calculator.enableCompletenessMeasurement(true);
-        calculator.configure();
+        // Instantiate schema
+        Schema schema = new MeemooCSVSchema();
+
+        // Define measurements
+        CalculatorFacade calculator = new CalculatorFacade()
+                // set the schema which describes the source
+                .setSchema(schema)
+                // right now it is a CSV source, so we set how to parse it
+                .setCsvReader(
+                        new CsvReader()
+                                .setHeader(((CsvAwareSchema) schema).getHeader()))
+                .enableCompletenessMeasurement()
+                .enableFieldCardinalityMeasurement();
+
+                //.enableFieldExistenceMeasurement();
+
 
         try {
+
+
             // initialize lines stream
-            final Path path = Paths.get("./head-json.txt");
+            final Path path = Paths.get(inputFile);
 
             Stream<String> stream = Files.lines(path);
 
+            System.out.println(calculator.getHeader());
+
             // read lines
-            stream.forEach((jsonRecord) -> {
+            stream.forEach((record) -> {
                 try {
-                    String csv = calculator.measure(jsonRecord);
+                    String csv = calculator.measure(record);
 
                     System.out.println(csv);
                     // save csv
                 } catch (InvalidJsonException e) {
                     // handle exception
                     logger.severe(String.format("Invalid JSON in %s: %s. Error message: %s.",
-                            path.toString(), jsonRecord, e.getLocalizedMessage()));
+                            path.toString(), record, e.getLocalizedMessage()));
                 }
             });
 

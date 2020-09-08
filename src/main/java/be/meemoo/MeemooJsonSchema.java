@@ -11,7 +11,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-public class MeemooSchema implements Schema {
+public class MeemooJsonSchema implements Schema {
 
     private static final List<FieldGroup> FIELD_GROUPS = new ArrayList<FieldGroup>();
     private static final List<String> NO_LANGUAGE_FIELDS = new ArrayList<String>();
@@ -75,15 +75,14 @@ public class MeemooSchema implements Schema {
                 "$.['dcterms_abstract']",
                 Category.MANDATORY));
 
-        addPath(new JsonBranch("dcterms_abstract",
-                "$.['dcterms_abstract']",
+        addPath(new JsonBranch("dcterms_created",
+                "$.['dcterms_created']",
                 Category.MANDATORY));
 
-        addPath(new JsonBranch("dcterms_created",
+        addPath(new JsonBranch("dcterms_issued",
                 "$.['dcterms_issued']",
                 Category.MANDATORY));
     }
-
 
     public Format getFormat() {
         return Format.JSON;
