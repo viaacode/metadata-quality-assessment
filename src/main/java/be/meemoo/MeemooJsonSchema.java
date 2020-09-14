@@ -3,8 +3,11 @@ package be.meemoo;
 import de.gwdg.metadataqa.api.json.FieldGroup;
 import de.gwdg.metadataqa.api.json.JsonBranch;
 import de.gwdg.metadataqa.api.model.Category;
+import de.gwdg.metadataqa.api.rule.PatternChecker;
+import de.gwdg.metadataqa.api.rule.RuleChecker;
 import de.gwdg.metadataqa.api.schema.Format;
 import de.gwdg.metadataqa.api.schema.Schema;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -21,6 +24,7 @@ public class MeemooJsonSchema implements Schema {
     private static final Map<String, JsonBranch> PATHS = new LinkedHashMap<String, JsonBranch>();
     private static final Map<String, JsonBranch> COLLECTION_PATHS = new LinkedHashMap<String, JsonBranch>();
     private static List<Category> categories = new ArrayList<>();
+    private List<RuleChecker> ruleCheckers;
 
     static {
         addPath(new JsonBranch("fragment_id_mam",
@@ -146,5 +150,17 @@ public class MeemooJsonSchema implements Schema {
     @Override
     public List<Category> getCategories() {
         return categories;
+    }
+
+    @Override
+    public List<RuleChecker> getRuleCheckers() {
+        if (ruleCheckers == null) {
+            ruleCheckers = new ArrayList<>();
+            for (JsonBranch branch : PATHS.values())
+                if (StringUtils.isNotBlank(branch.getPattern()))
+                    ruleCheckers.add(new PatternChecker(branch, branch.getPattern(), branch.getLabel()));
+            categories = Category.extractCategories(PATHS.values());
+        }
+        return ruleCheckers;
     }
 }

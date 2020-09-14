@@ -21,6 +21,7 @@ import java.util.stream.Stream;
  * Hello world!
  */
 public class App {
+
     private static final Logger logger = Logger.getLogger(App.class.getCanonicalName());
 
     public static void main(String[] args) {

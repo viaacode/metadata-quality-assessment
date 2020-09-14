@@ -1,0 +1,51 @@
+format: json
+fields:
+  - name: fragment_id_mam
+    path: $.['fragment_id_mam']
+    categories: [MANDATORY]
+    rules:
+      - pattern: ^[0-9a-f]+$
+  - name: mediaobject_id_mam
+    path: $.['mediaobject_id_mam']
+    categories: [MANDATORY]
+  - name: cp
+    paath: $.['cp']
+    categories: [MANDATORY]
+  - name: cp_id
+    path: $.['cp_id']
+    categories: [MANDATORY]
+  - name: sp_id
+    path: $.['sp_id']
+    categories: [MANDATORY]
+  - name: dc_description
+    categories: [MANDATORY]
+  - name: pid
+    path: $.['pid']
+    categories: [MANDATORY]
+  - name: dc_description
+    path: $.['dc_description']
+    categories: [MANDATORY]
+  - name: dc_format
+    path: $.['dc_format']
+    categories: [MANDATORY]
+  - name: dc_publisher
+    path: $.['dc_publisher']
+    categories: [MANDATORY]
+  - name: dc_source
+    path: $.['dc_source']
+    categories: [MANDATORY]
+  - name: dc_terms
+    path: $.['dc_terms']
+    categories: [MANDATORY]
+  - name: dc_title
+    path: $.['dc_title']
+    categories: [MANDATORY]
+  - name: dcterms_abstract
+    path: $.['dcterms_abstract']
+    categories: [MANDATORY]
+  - name: dcterms_created
+    path: $.['dcterms_created']
+    categories: [MANDATORY]
+  - name: dcterms_issued
+    path: $.['dcterms_issued']
+    categories: [MANDATORY]

@@ -1,0 +1,32 @@
+format: csv
+fields:
+  - name: fragment_id_mam
+    categories: [MANDATORY]
+    extractable: true
+    rules:
+      pattern: ^[0-9a-f]+$
+  - name: mediaobject_id_mam
+  - name: cp
+    categories: [MANDATORY]
+    extractable: true
+  - name: cp_id
+    categories: [MANDATORY]
+    extractable: true
+  - name: sp_id
+  - name: sp_name
+  - name: pid
+    categories: [MANDATORY]
+    extractable: true
+  - name: dc_description
+    categories: [MANDATORY]
+    extractable: true
+  - name: dc_format
+  - name: dc_publisher
+  - name: dc_source
+  - name: dc_terms
+  - name: dc_title
+    categories: [MANDATORY]
+    extractable: true
+  - name: dcterms_abstract
+  - name: dcterms_created
+  - name: dcterms_issued
