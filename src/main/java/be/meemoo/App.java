@@ -1,21 +1,22 @@
 package be.meemoo;
 
 import com.jayway.jsonpath.InvalidJsonException;
+import com.opencsv.CSVReader;
+import com.opencsv.CSVReaderHeaderAware;
+import com.opencsv.CSVWriter;
+import com.opencsv.exceptions.CsvValidationException;
 import de.gwdg.metadataqa.api.calculator.CalculatorFacade;
-import de.gwdg.metadataqa.api.json.JsonBranch;
-import de.gwdg.metadataqa.api.model.Category;
-import de.gwdg.metadataqa.api.schema.BaseSchema;
+import de.gwdg.metadataqa.api.configuration.ConfigurationReader;
 import de.gwdg.metadataqa.api.schema.CsvAwareSchema;
-import de.gwdg.metadataqa.api.schema.Format;
 import de.gwdg.metadataqa.api.schema.Schema;
 import de.gwdg.metadataqa.api.util.CsvReader;
 
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.logging.Logger;
-import java.util.stream.Stream;
 
 /**
  * Hello world!
@@ -24,18 +25,22 @@ public class App {
 
     private static final Logger logger = Logger.getLogger(App.class.getCanonicalName());
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws FileNotFoundException {
 
         // Take input file
         // Check how many arguments were passed in
-        if (args.length == 0) {
-            System.out.println("[csv file]");
+        if (args.length == 0 || args.length < 3) {
+            System.out.println("java -jar target/meemoo-qa-api-1.0-SNAPSHOT-shaded.jar <input csv> <schema file> <output csv>");
             System.exit(0);
         }
         String inputFile = args[0];
+        String schemaFile = args[1];
+        String outputFile = args[2];
 
         // Instantiate schema
-        Schema schema = new MeemooCSVSchema();
+        Schema schema = ConfigurationReader
+                .readYaml(schemaFile)
+                .asSchema();
 
         // Define measurements
         CalculatorFacade calculator = new CalculatorFacade()
@@ -48,42 +53,43 @@ public class App {
                 .enableCompletenessMeasurement()
                 .enableFieldCardinalityMeasurement();
 
-                //.enableFieldExistenceMeasurement();
-
-
         try {
-
-
             // initialize lines stream
-            final Path path = Paths.get(inputFile);
+            final Path inputPath = Paths.get(inputFile);
+            final Path outputPath = Paths.get(outputFile);
 
-            Stream<String> stream = Files.lines(path);
+            // Configure input
+            BufferedReader csvBufferedReader = Files.newBufferedReader(inputPath);
+            final CSVReaderHeaderAware csvReader = new CSVReaderHeaderAware(csvBufferedReader);
 
-            System.out.println(calculator.getHeader());
+            // Configure output
+            BufferedWriter csvBufferedWriter = Files.newBufferedWriter(outputPath);
+            final CSVWriter csvWriter = new CSVWriter(csvBufferedWriter);
 
-            // read lines
-            stream.forEach((record) -> {
+            // print header
+            csvWriter.writeNext(calculator.getHeader().toArray(new String[0]));
+
+            String[] record = null;
+            while ((record = csvReader.readNext()) != null) {
                 try {
-                    String csv = calculator.measure(record);
-
-                    System.out.println(csv);
+                    String csvRecord = CsvReader.toCsv(record); // Serialize as CSV
+                    List<String> result = calculator.measureAsList(csvRecord);
+                    csvWriter.writeNext(result.toArray(new String[0]));
                     // save csv
                 } catch (InvalidJsonException e) {
                     // handle exception
                     logger.severe(String.format("Invalid JSON in %s: %s. Error message: %s.",
-                            path.toString(), record, e.getLocalizedMessage()));
+                            inputPath.toString(), record, e.getLocalizedMessage()));
                 }
-            });
+            }
 
-            // close the stream
-            stream.close();
-
-        } catch (IOException ex) {
-            ex.printStackTrace();
+            csvWriter.close();
+        } catch (CsvValidationException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-
     }
-
 }
 
 
