@@ -1,7 +1,6 @@
 package be.meemoo;
 
 import com.jayway.jsonpath.InvalidJsonException;
-import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderHeaderAware;
 import com.opencsv.CSVWriter;
 import com.opencsv.exceptions.CsvValidationException;
@@ -15,6 +14,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -72,8 +72,7 @@ public class App {
             String[] record = null;
             while ((record = csvReader.readNext()) != null) {
                 try {
-                    String csvRecord = CsvReader.toCsv(record); // Serialize as CSV
-                    List<String> result = calculator.measureAsList(csvRecord);
+                    List<String> result = calculator.measureAsList(Arrays.asList(record));
                     csvWriter.writeNext(result.toArray(new String[0]));
                     // save csv
                 } catch (InvalidJsonException e) {
