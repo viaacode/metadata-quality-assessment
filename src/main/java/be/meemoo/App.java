@@ -67,12 +67,17 @@ public class App {
             final CSVWriter csvWriter = new CSVWriter(csvBufferedWriter);
 
             // print header
-            csvWriter.writeNext(calculator.getHeader().toArray(new String[0]));
+            List<String> header = calculator.getHeader();
+            header.add("fid");
+
+            csvWriter.writeNext(header.toArray(new String[0]));
 
             String[] record = null;
             while ((record = csvReader.readNext()) != null) {
                 try {
                     List<String> result = calculator.measureAsList(Arrays.asList(record));
+                    result.add(record[0]);
+
                     csvWriter.writeNext(result.toArray(new String[0]));
                     // save csv
                 } catch (InvalidJsonException e) {
