@@ -75,8 +75,9 @@ public class App {
             String[] record = null;
             while ((record = csvReader.readNext()) != null) {
                 try {
-                    List<String> result = calculator.measureAsList(Arrays.asList(record));
-                    result.add(record[0]);
+                    List<String> strings = Arrays.asList(record);
+                    List<String> result = calculator.measureAsList(strings);
+                    result.add(strings.get(0));
 
                     csvWriter.writeNext(result.toArray(new String[0]));
                     // save csv
