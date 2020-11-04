@@ -14,6 +14,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
@@ -67,8 +68,12 @@ public class App {
             final CSVWriter csvWriter = new CSVWriter(csvBufferedWriter);
 
             // print header
-            List<String> header = calculator.getHeader();
-            header.add("fid");
+            List<String> header = new ArrayList<>();
+            header.add("fragment_id_mam");
+            header.add("mediaobject_id_mam");
+            header.add("ie_id");
+
+            header.addAll(calculator.getHeader());
 
             csvWriter.writeNext(header.toArray(new String[0]));
 
@@ -76,10 +81,13 @@ public class App {
             while ((record = csvReader.readNext()) != null) {
                 try {
                     List<String> strings = Arrays.asList(record);
-                    List<String> result = calculator.measureAsList(strings);
-                    result.add(strings.get(0));
 
-                    csvWriter.writeNext(result.toArray(new String[0]));
+                    List<String> results = new ArrayList<>();
+                    results.addAll(strings.subList(0,2)); // Add IDs to results
+                    results.addAll(calculator.measureAsList(strings)); // Add QA results
+
+                    // Write results to CSV
+                    csvWriter.writeNext(results.toArray(new String[0]));
                     // save csv
                 } catch (InvalidJsonException e) {
                     // handle exception
