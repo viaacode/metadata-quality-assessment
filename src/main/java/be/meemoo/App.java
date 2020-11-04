@@ -51,8 +51,8 @@ public class App {
                 .setCsvReader(
                         new CsvReader()
                                 .setHeader(((CsvAwareSchema) schema).getHeader()))
-                .enableCompletenessMeasurement();
-                //.enableFieldCardinalityMeasurement();
+                .enableCompletenessMeasurement()
+                .enableFieldCardinalityMeasurement();
 
         try {
             // initialize lines stream
