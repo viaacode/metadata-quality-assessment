@@ -51,8 +51,8 @@ public class App {
                 .setCsvReader(
                         new CsvReader()
                                 .setHeader(((CsvAwareSchema) schema).getHeader()))
-                .enableCompletenessMeasurement()
-                .enableFieldCardinalityMeasurement();
+                .enableCompletenessMeasurement();
+                //.enableFieldCardinalityMeasurement();
 
         try {
             // initialize lines stream
@@ -83,7 +83,7 @@ public class App {
                     List<String> strings = Arrays.asList(record);
 
                     List<String> results = new ArrayList<>();
-                    results.addAll(strings.subList(0,2)); // Add IDs to results
+                    results.addAll(strings.subList(0,3)); // Add IDs to results
                     results.addAll(calculator.measureAsList(strings)); // Add QA results
 
                     // Write results to CSV
