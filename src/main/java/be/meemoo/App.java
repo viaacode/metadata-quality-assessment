@@ -54,6 +54,7 @@ public class App {
                 .enableCompletenessMeasurement()
                 .enableFieldCardinalityMeasurement();
 
+        long counter =0;
         try {
             // initialize lines stream
             final Path inputPath = Paths.get(inputFile);
@@ -88,7 +89,9 @@ public class App {
 
                     // Write results to CSV
                     csvWriter.writeNext(results.toArray(new String[0]));
-                    // save csv
+                    // update process
+                    counter++;
+                    logger.info(String.format("Assessed fragment %s. Processed %s records. ", strings.get(0), counter));
                 } catch (InvalidJsonException e) {
                     // handle exception
                     logger.severe(String.format("Invalid JSON in %s: %s. Error message: %s.",
@@ -96,8 +99,10 @@ public class App {
                 }
             }
 
+            logger.info(String.format("Assessment completed successfully with %s records. ", counter));
             csvWriter.close();
         } catch (CsvValidationException e) {
+            logger.warning(String.format("Assessment failed with %s records. ", counter));
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
