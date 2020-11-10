@@ -55,6 +55,8 @@ public class App {
                 .enableFieldCardinalityMeasurement();
 
         long counter =0;
+
+
         try {
             // initialize lines stream
             final Path inputPath = Paths.get(inputFile);
@@ -96,13 +98,18 @@ public class App {
                     // handle exception
                     logger.severe(String.format("Invalid JSON in %s: %s. Error message: %s.",
                             inputPath.toString(), record, e.getLocalizedMessage()));
+                } catch (Exception e) {
+                    logger.severe(String.format("Measurement failed at record %s with %s columns (expected %s)", counter +1, record.length, header.size()));
+                    logger.severe(Arrays.toString(record));
+                    e.printStackTrace();
+                    throw e;
                 }
             }
 
             logger.info(String.format("Assessment completed successfully with %s records. ", counter));
             csvWriter.close();
         } catch (CsvValidationException e) {
-            logger.warning(String.format("Assessment failed with %s records. ", counter));
+            logger.severe(String.format("Assessment failed with %s records. ", counter));
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
