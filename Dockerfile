@@ -1,5 +1,5 @@
-# FROM maven:3.3-jdk-8-onbuild
-FROM arm64v8/maven:3-adoptopenjdk-8 AS builder
+FROM maven:3.3-jdk-8-onbuild AS builder
+#FROM arm64v8/maven:3-adoptopenjdk-8 AS builder
 RUN mkdir -p /app
 WORKDIR app
 COPY . /app

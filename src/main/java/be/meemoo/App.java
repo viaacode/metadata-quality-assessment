@@ -2,12 +2,10 @@ package be.meemoo;
 
 import com.jayway.jsonpath.InvalidJsonException;
 import com.opencsv.CSVReader;
-import com.opencsv.CSVReaderHeaderAware;
 import com.opencsv.CSVWriter;
 import com.opencsv.exceptions.CsvValidationException;
 import de.gwdg.metadataqa.api.calculator.CalculatorFacade;
 import de.gwdg.metadataqa.api.configuration.ConfigurationReader;
-import de.gwdg.metadataqa.api.schema.CsvAwareSchema;
 import de.gwdg.metadataqa.api.schema.Schema;
 import de.gwdg.metadataqa.api.util.CsvReader;
 import org.apache.commons.cli.*;
@@ -24,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 
 /**
@@ -100,12 +99,12 @@ public class App {
             // print header
             List<String> header = new ArrayList<>();
             header.add("fragment_id_mam");
-            header.add("mediaobject_id_mam");
-            header.add("ie_id");
 
             header.addAll(calculator.getHeader());
+            // Switch headers
+            List<String> outputHeader = header.stream().map(s -> s.replaceAll("(:|/)","_").toLowerCase()).collect(Collectors.toList());;
 
-            csvWriter.writeNext(header.toArray(new String[0]));
+            csvWriter.writeNext(outputHeader.toArray(new String[0]));
 
 
             switch (this.schema.getFormat()) {
@@ -135,8 +134,6 @@ public class App {
 
                 List<String> results = new ArrayList<>();
                 results.add(obj.getString("fragment_id_mam"));
-                results.add(obj.getString("mediaobject_id_mam"));
-                results.add(obj.getString("ie_id"));
                 results.addAll(calculator.measureAsList(record)); // Add QA results
 
                 // Write results to CSV
@@ -179,7 +176,7 @@ public class App {
                     List<String> strings = Arrays.asList(record);
 
                     List<String> results = new ArrayList<>();
-                    results.addAll(strings.subList(0, 3)); // Add IDs to results
+                    results.add(strings.get(0)); // Add ID to results
                     results.addAll(calculator.measureAsList(strings)); // Add QA results
 
                     // Write results to CSV
