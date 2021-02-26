@@ -102,7 +102,7 @@ public class App {
 
             header.addAll(calculator.getHeader());
             // Switch headers
-            List<String> outputHeader = header.stream().map(s -> s.replaceAll("(:|/)","_").toLowerCase()).collect(Collectors.toList());;
+            List<String> outputHeader = header.stream().map(s -> s.replaceAll("(:|/|\\.)","_").toLowerCase()).collect(Collectors.toList());;
 
             csvWriter.writeNext(outputHeader.toArray(new String[0]));
 
