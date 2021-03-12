@@ -64,7 +64,7 @@ public class App {
         // Take input file
         // Check how many arguments were passed in
         if (args.length == 0 || args.length < 3) {
-            System.out.println("java -jar target/meemoo-qa-api-1.0-SNAPSHOT-shaded.jar <input csv> <schema file> <output csv>");
+            System.out.println("java -jar target/meemoo-qa-api-1.0-SNAPSHOT-shaded.jar -i <input csv> -s <schema file> -o <output csv> []");
             System.exit(0);
         }
 
@@ -72,7 +72,7 @@ public class App {
         options.addOption(new Option("i", "input", true, "Input CSV file."));
         options.addOption(new Option("s", "schema", true, "Schema file to run assessment against."));
         options.addOption(new Option("o", "output", true, "Output CSV file."));
-        options.addOption(new Option("f", "format", true, "Output CSV file."));
+        options.addOption(new Option("f", "format", true, "JSON or CSV"));
 
         // create the parser
         CommandLineParser parser = new DefaultParser();
@@ -140,7 +140,9 @@ public class App {
                 csvWriter.writeNext(results.toArray(new String[0]));
                 // update process
                 counter++;
-                logger.info(String.format("Assessed fragment %s. Processed %s records. ", obj.getString("fragment_id_mam"), counter));
+                if (counter % 50 == 0) {
+                    logger.info(String.format("Assessed fragment %s. Processed %s records. ", obj.getString("fragment_id_mam"), counter));
+                }
             } catch (InvalidJsonException e) {
                 // handle exception
                 logger.severe(String.format("Invalid JSON in %s: %s. Error message: %s.",
@@ -183,7 +185,9 @@ public class App {
                     csvWriter.writeNext(results.toArray(new String[0]));
                     // update process
                     counter++;
-                    logger.info(String.format("Assessed fragment %s. Processed %s records. ", strings.get(0), counter));
+                    if (counter % 50 == 0) {
+                        logger.info(String.format("Assessed fragment %s. Processed %s records. ", strings.get(0), counter));
+                    }
                 } catch (InvalidJsonException e) {
                     // handle exception
                     logger.severe(String.format("Invalid JSON in %s: %s. Error message: %s.",
