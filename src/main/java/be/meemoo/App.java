@@ -64,15 +64,14 @@ public class App {
         // Take input file
         // Check how many arguments were passed in
         if (args.length == 0 || args.length < 3) {
-            System.out.println("java -jar target/meemoo-qa-api-1.0-SNAPSHOT-shaded.jar -i <input csv> -s <schema file> -o <output csv> []");
+            System.out.println("java -jar target/meemoo-qa-api-1.0-SNAPSHOT-shaded.jar -i <input> -s <schema> -o <output>");
             System.exit(0);
         }
 
         final Options options = new Options();
-        options.addOption(new Option("i", "input", true, "Input CSV file."));
+        options.addOption(new Option("i", "input", true, "Input file."));
         options.addOption(new Option("s", "schema", true, "Schema file to run assessment against."));
-        options.addOption(new Option("o", "output", true, "Output CSV file."));
-        options.addOption(new Option("f", "format", true, "JSON or CSV"));
+        options.addOption(new Option("o", "output", true, "Output file."));
 
         // create the parser
         CommandLineParser parser = new DefaultParser();
@@ -83,7 +82,7 @@ public class App {
         } catch (ParseException exp) {
 
             HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("ant", options);
+            formatter.printHelp("java -jar target/meemoo-qa-api-1.0-SNAPSHOT-shaded.jar", options);
             // oops, something went wrong
             System.err.println("Parsing failed.  Reason: " + exp.getMessage());
         }
