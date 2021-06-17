@@ -6,15 +6,15 @@ import com.opencsv.CSVWriter;
 import com.opencsv.exceptions.CsvValidationException;
 import de.gwdg.metadataqa.api.calculator.CalculatorFacade;
 import de.gwdg.metadataqa.api.configuration.ConfigurationReader;
+import de.gwdg.metadataqa.api.configuration.MeasurementConfiguration;
+import de.gwdg.metadataqa.api.schema.BaseSchema;
 import de.gwdg.metadataqa.api.schema.Schema;
 import de.gwdg.metadataqa.api.util.CsvReader;
 import org.apache.commons.cli.*;
+import org.apache.commons.io.FilenameUtils;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -32,56 +32,114 @@ public class App {
 
     private static final Logger logger = Logger.getLogger(App.class.getCanonicalName());
 
-    private final Schema schema;
     private final CalculatorFacade calculator;
-    private final Path inputPath;
-    private final Path outputPath;
+    private final BufferedReader inputReader;
+    private BufferedWriter outputWriter;
+
+    private Schema schema;
+
+
+    // Arguments
+    private static final String INPUT_FILE = "input";
+    private static final String INPUT_FORMAT = "inputFormat";
+    private static final String OUTPUT_FILE = "output";
+    private static final String OUTPUT_FORMAT = "inputFormat";
+    private static final String SCHEMA_CONFIG = "schema";
+    private static final String SCHEMA_FORMAT = "schemaFormat";
+    private static final String MEASUREMENTS_CONFIG = "measurements";
+    private static final String HEADERS_CONFIG = "headers";
+    private static final String MEASUREMENTS_FORMAT = "measurementsFormat";
+
+
 
     public App(CommandLine cmd) throws FileNotFoundException {
-        String inputFile = cmd.getOptionValue("input");
-        String outputFile = cmd.getOptionValue("output");
+        // initialize input
+        String inputFile = cmd.getOptionValue(INPUT_FILE);
+        Path inputPath = Paths.get(inputFile);
+        inputReader = Files.newBufferedReader(inputPath);
 
-        // initialize lines stream
-        this.inputPath = Paths.get(inputFile);
-        this.outputPath = Paths.get(outputFile);
+        // initialize output
+        if (cmd.hasOption(OUTPUT_FILE)) {
+            String outputFile = cmd.getOptionValue(OUTPUT_FILE);
+            Path outputPath = Paths.get(outputFile);
+            try {
+                this.outputWriter = Files.newBufferedWriter(outputPath);
+            } catch (IOException e) {
+                logger.warning(String.format("File %s not found. Printing output to stdout.",
+                        outputPath.toString()));
+                this.outputWriter = new BufferedWriter(new OutputStreamWriter(System.out));
+            }
+        } else {
+            // write to std out if no file was given
+            this.outputWriter = new BufferedWriter(new OutputStreamWriter(System.out));
+        }
 
-        String schemaFile = cmd.getOptionValue("schema");
-        this.schema = ConfigurationReader
-                .readYaml(schemaFile)
-                .asSchema();
+        // initialize config
+        String schemaFile = cmd.getOptionValue(SCHEMA_CONFIG);
+        String measurementFile = cmd.getOptionValue(MEASUREMENTS_CONFIG);
 
-        this.calculator = new CalculatorFacade()
+        String schemaFormat = cmd.hasOption(SCHEMA_FORMAT) ? cmd.getOptionValue(SCHEMA_FORMAT) : FilenameUtils.getExtension(schemaFile);
+        switch (schemaFormat) {
+            case "yaml":
+                this.schema = ConfigurationReader.readSchemaYaml(schemaFile).asSchema();
+                break;
+            case "json":
+            default:
+                this.schema = ConfigurationReader.readSchemaJson(schemaFile).asSchema();
+        }
+
+        MeasurementConfiguration measurementConfig;
+        String measurementFormat = cmd.hasOption(MEASUREMENTS_FORMAT) ? cmd.getOptionValue(MEASUREMENTS_FORMAT) : FilenameUtils.getExtension(measurementFile);
+        switch (measurementFormat) {
+            case "yaml":
+                measurementConfig = ConfigurationReader.readMeasurementYaml(measurementFile);
+                break;
+            case "json":
+            default:
+                measurementConfig = ConfigurationReader.readMeasurementJson(measurementFile);
+        }
+
+
+        this.calculator = new CalculatorFacade(measurementConfig)
                 // set the schema which describes the source
-                .setSchema(schema)
-                // Define measurements
-                .enableCompletenessMeasurement()
-                .enableFieldCardinalityMeasurement();
-
+                .setSchema(this.schema);
     }
 
     public static void main(String[] args) throws FileNotFoundException {
 
         // Take input file
-        // Check how many arguments were passed in
-        if (args.length == 0 || args.length < 3) {
-            System.out.println("java -jar target/meemoo-qa-api-1.0-SNAPSHOT-shaded.jar -i <input> -s <schema> -o <output>");
-            System.exit(0);
-        }
 
         final Options options = new Options();
-        options.addOption(new Option("i", "input", true, "Input file."));
-        options.addOption(new Option("s", "schema", true, "Schema file to run assessment against."));
-        options.addOption(new Option("o", "output", true, "Output file."));
+        options.addOption(new Option("i", INPUT_FILE, true, "Input file."));
+        options.addOption(new Option("u", INPUT_FORMAT, true, "Input file."));
+
+        options.addOption(new Option("s", SCHEMA_CONFIG, true, "Schema file to run assessment against."));
+        options.addOption(new Option("v", SCHEMA_FORMAT, true, "Format of schema file."));
+
+        options.addOption(new Option("m", MEASUREMENTS_CONFIG, true, "Config file for measurements."));
+        options.addOption(new Option("w", MEASUREMENTS_FORMAT, true, "Format of measurements file."));
+
+        options.addOption(new Option("o", OUTPUT_FILE, false, "Output file."));
+        options.addOption(new Option("f", OUTPUT_FORMAT, true, "Output file."));
+        options.addOption(new Option("h", HEADERS_CONFIG, true, "Headers to copy from source"));
 
         // create the parser
         CommandLineParser parser = new DefaultParser();
+
+        // create help formatter
+        HelpFormatter formatter = new HelpFormatter();
+
+        // Check how many arguments were passed in
+        if (args.length == 0 || args.length < 3) {
+            formatter.printHelp("java -jar target/meemoo-qa-api-1.0-SNAPSHOT-shaded.jar", options);
+            System.exit(0);
+        }
+
         try {
             // parse the command line arguments
             CommandLine cmd = parser.parse(options, args);
             new App(cmd).run();
         } catch (ParseException exp) {
-
-            HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("java -jar target/meemoo-qa-api-1.0-SNAPSHOT-shaded.jar", options);
             // oops, something went wrong
             System.err.println("Parsing failed.  Reason: " + exp.getMessage());
@@ -91,10 +149,8 @@ public class App {
     public void run() {
 
         try {
-            // Configure output
-            BufferedWriter csvBufferedWriter = Files.newBufferedWriter(this.outputPath);
-            final CSVWriter csvWriter = new CSVWriter(csvBufferedWriter);
 
+            final CSVWriter csvWriter = new CSVWriter(outputWriter);
             // print header
             List<String> header = new ArrayList<>();
             header.add("fragment_id_mam");
@@ -121,13 +177,10 @@ public class App {
     }
 
     public void runJSON(CSVWriter csvWriter) throws IOException {
-        // Configure input
-        BufferedReader jsonBufferedReader = Files.newBufferedReader(this.inputPath);
-
         long counter = 0;
 
         String record = null;
-        while ((record = jsonBufferedReader.readLine()) != null) {
+        while ((record = inputReader.readLine()) != null) {
             try {
                 JSONObject obj = new JSONObject(record);
 
@@ -159,8 +212,7 @@ public class App {
     public void runCSV(CSVWriter csvWriter) throws IOException {
 
         // Configure input
-        BufferedReader csvBufferedReader = Files.newBufferedReader(this.inputPath);
-        final CSVReader csvReader = new CSVReader(csvBufferedReader);
+        final CSVReader csvReader = new CSVReader(inputReader);
 
         long counter = 0;
         try {
@@ -206,6 +258,14 @@ public class App {
         } finally {
             csvWriter.close();
         }
+
+    }
+
+    public void writeResults(List<String> results) {
+
+    }
+
+    public void printProgress() {
 
     }
 
