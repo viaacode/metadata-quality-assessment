@@ -153,6 +153,11 @@ public class App {
             formatter.printHelp("java -jar target/meemoo-qa-api-1.0-SNAPSHOT-shaded.jar", options);
             // oops, something went wrong
             System.err.println("Parsing failed.  Reason: " + exp.getMessage());
+        } catch (Exception ex) {
+            System.err.println("Error: " + ex.getMessage());
+        }
+        finally {
+            formatter.printHelp("java -jar target/meemoo-qa-api-1.0-SNAPSHOT-shaded.jar", options);
         }
     }
 
