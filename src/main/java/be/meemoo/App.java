@@ -34,18 +34,16 @@ public class App {
 
     private final CalculatorFacade calculator;
     private final BufferedReader inputReader;
-    private final String inputFormat;
+    private final List<String> headerList;
     private String outputFormat;
     private BufferedWriter outputWriter;
 
     private Schema schema;
 
-
     // Arguments
     private static final String INPUT_FILE = "input";
-    private static final String INPUT_FORMAT = "inputFormat";
     private static final String OUTPUT_FILE = "output";
-    private static final String OUTPUT_FORMAT = "inputFormat";
+    private static final String OUTPUT_FORMAT = "outputFormat";
     private static final String SCHEMA_CONFIG = "schema";
     private static final String SCHEMA_FORMAT = "schemaFormat";
     private static final String MEASUREMENTS_CONFIG = "measurements";
@@ -55,15 +53,11 @@ public class App {
     private static final String JSON = "json";
     private static final String YAML = "yaml";
 
-
-
     public App(CommandLine cmd) throws IOException {
         // initialize input
         String inputFile = cmd.getOptionValue(INPUT_FILE);
         Path inputPath = Paths.get(inputFile);
         inputReader = Files.newBufferedReader(inputPath);
-
-        this.inputFormat = cmd.hasOption(INPUT_FORMAT) ? cmd.getOptionValue(INPUT_FORMAT) : FilenameUtils.getExtension(inputFile);
 
         // initialize output
         if (cmd.hasOption(OUTPUT_FILE)) {
@@ -76,19 +70,19 @@ public class App {
                 logger.warning(String.format("File %s not found. Printing output to stdout.",
                         outputPath.toString()));
                 this.outputWriter = new BufferedWriter(new OutputStreamWriter(System.out));
-                this.outputFormat = cmd.hasOption(OUTPUT_FORMAT) ? cmd.getOptionValue(OUTPUT_FORMAT) : JSON;
+                this.outputFormat = cmd.getOptionValue(OUTPUT_FORMAT, JSON);
             }
         } else {
             // write to std out if no file was given
             this.outputWriter = new BufferedWriter(new OutputStreamWriter(System.out));
-            this.outputFormat = cmd.hasOption(OUTPUT_FORMAT) ? cmd.getOptionValue(OUTPUT_FORMAT) : JSON;
+            this.outputFormat = cmd.getOptionValue(OUTPUT_FORMAT, JSON);
         }
 
         // initialize config
         String schemaFile = cmd.getOptionValue(SCHEMA_CONFIG);
         String measurementFile = cmd.getOptionValue(MEASUREMENTS_CONFIG);
 
-        String schemaFormat = cmd.hasOption(SCHEMA_FORMAT) ? cmd.getOptionValue(SCHEMA_FORMAT) : FilenameUtils.getExtension(schemaFile);
+        String schemaFormat = cmd.getOptionValue(SCHEMA_FORMAT, FilenameUtils.getExtension(schemaFile));
         switch (schemaFormat) {
             case YAML:
                 this.schema = ConfigurationReader.readSchemaYaml(schemaFile).asSchema();
@@ -99,7 +93,7 @@ public class App {
         }
 
         MeasurementConfiguration measurementConfig;
-        String measurementFormat = cmd.hasOption(MEASUREMENTS_FORMAT) ? cmd.getOptionValue(MEASUREMENTS_FORMAT) : FilenameUtils.getExtension(measurementFile);
+        String measurementFormat = cmd.getOptionValue(MEASUREMENTS_FORMAT, FilenameUtils.getExtension(measurementFile));
         switch (measurementFormat) {
             case YAML:
                 measurementConfig = ConfigurationReader.readMeasurementYaml(measurementFile);
@@ -113,6 +107,10 @@ public class App {
         this.calculator = new CalculatorFacade(measurementConfig)
                 // set the schema which describes the source
                 .setSchema(this.schema);
+
+        String[] headers = cmd.getOptionValues(HEADERS_CONFIG);
+        this.headerList = headers != null ? Arrays.asList(headers) : new ArrayList<String>();
+
     }
 
     public static void main(String[] args) throws FileNotFoundException {
@@ -121,7 +119,6 @@ public class App {
 
         final Options options = new Options();
         options.addOption(new Option("i", INPUT_FILE, true, "Input file."));
-        options.addOption(new Option("u", INPUT_FORMAT, true, "Input file."));
 
         options.addOption(new Option("s", SCHEMA_CONFIG, true, "Schema file to run assessment against."));
         options.addOption(new Option("v", SCHEMA_FORMAT, true, "Format of schema file."));
@@ -164,31 +161,39 @@ public class App {
     public void run() {
 
         try {
-
-            final CSVWriter csvWriter = new CSVWriter(outputWriter);
-            // print header
-            List<String> header = new ArrayList<>();
-            header.add("fragment_id_mam");
-
-            header.addAll(calculator.getHeader());
-            // Switch headers
-            List<String> outputHeader = header.stream().map(s -> s.replaceAll("(:|/|\\.)","_").toLowerCase()).collect(Collectors.toList());;
-
-            csvWriter.writeNext(outputHeader.toArray(new String[0]));
-
-
-            switch (this.schema.getFormat()) {
+            switch (outputFormat) {
                 case CSV:
-                    runCSV(csvWriter);
-                    break;
-                case JSON:
-                    runJSON(csvWriter);
-                    break;
-            }
+                    final CSVWriter csvWriter = new CSVWriter(outputWriter);
+                    printCsvHeader(csvWriter);
 
+                    switch (this.schema.getFormat()) {
+                        case CSV:
+                            runCSV(csvWriter);
+                            break;
+                        case JSON:
+                            runJSON(csvWriter);
+                            break;
+                    }
+
+                case JSON:
+
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private void printCsvHeader(CSVWriter csvWriter){
+        // print header
+        List<String> header = new ArrayList<>();
+        header.addAll(headerList); // Add all headers that need to be copied from source
+        header.addAll(calculator.getHeader());
+        // Switch headers
+        List<String> outputHeader = header.stream()
+                .map(s -> s.replaceAll("(:|/|\\.)","_")
+                        .toLowerCase()).collect(Collectors.toList());
+
+        csvWriter.writeNext(outputHeader.toArray(new String[0]));
     }
 
     public void runJSON(CSVWriter csvWriter) throws IOException {
@@ -200,10 +205,13 @@ public class App {
                 JSONObject obj = new JSONObject(record);
 
                 List<String> results = new ArrayList<>();
-                results.add(obj.getString("fragment_id_mam"));
+                for (String h : headerList){
+                    results.add(obj.getString(h));
+                }
+
                 results.addAll(calculator.measureAsList(record)); // Add QA results
 
-                // Write results to CSV
+                // Write results
                 csvWriter.writeNext(results.toArray(new String[0]));
                 // update process
                 counter++;
@@ -212,8 +220,7 @@ public class App {
                 }
             } catch (InvalidJsonException e) {
                 // handle exception
-                logger.severe(String.format("Invalid JSON in %s: %s. Error message: %s.",
-                        inputPath.toString(), record, e.getLocalizedMessage()));
+                logger.severe(String.format("Invalid JSON: %s. Error message: %s.", record, e.getLocalizedMessage()));
             } catch (Exception e) {
                 e.printStackTrace();
                 throw e;
@@ -232,20 +239,25 @@ public class App {
         long counter = 0;
         try {
             // read header
-            String[] header = csvReader.readNext();
+            final List<String> header = Arrays.asList(csvReader.readNext());
+            // get indexes from headers to copy
+            final List<Integer> headerListIndexes = headerList.stream()
+                    .map(s -> header.indexOf(s))
+                    .collect(Collectors.toList());
 
             // right now it is a CSV source, so we set how to parse it
             this.calculator.setCsvReader(
-                    new CsvReader().setHeader(Arrays.asList(header)));
+                    new CsvReader().setHeader(header));
 
             String[] record = null;
             while ((record = csvReader.readNext()) != null) {
                 try {
                     List<String> strings = Arrays.asList(record);
-
                     List<String> results = new ArrayList<>();
-                    results.add(strings.get(0)); // Add ID to results
-                    results.addAll(calculator.measureAsList(strings)); // Add QA results
+                    // add copied headers to results first
+                    headerListIndexes.forEach(i -> results.add(strings.get(i)));
+                    // Add QA results
+                    results.addAll(calculator.measureAsList(strings));
 
                     // Write results to CSV
                     csvWriter.writeNext(results.toArray(new String[0]));
@@ -256,8 +268,7 @@ public class App {
                     }
                 } catch (InvalidJsonException e) {
                     // handle exception
-                    logger.severe(String.format("Invalid JSON in %s: %s. Error message: %s.",
-                            inputPath.toString(), record, e.getLocalizedMessage()));
+                    logger.severe(String.format("Invalid JSON: %s. Error message: %s.", record, e.getLocalizedMessage()));
                 } catch (Exception e) {
                     logger.severe(String.format("Measurement failed at record %s with %s columns (expected %s)", counter + 1, record.length, this.calculator.getHeader().size()));
                     logger.severe(Arrays.toString(record));
@@ -275,15 +286,6 @@ public class App {
         }
 
     }
-
-    public void writeResults(List<String> results) {
-
-    }
-
-    public void printProgress() {
-
-    }
-
 
 }
 
