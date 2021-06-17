@@ -34,6 +34,8 @@ public class App {
 
     private final CalculatorFacade calculator;
     private final BufferedReader inputReader;
+    private final String inputFormat;
+    private String outputFormat;
     private BufferedWriter outputWriter;
 
     private Schema schema;
@@ -49,14 +51,19 @@ public class App {
     private static final String MEASUREMENTS_CONFIG = "measurements";
     private static final String HEADERS_CONFIG = "headers";
     private static final String MEASUREMENTS_FORMAT = "measurementsFormat";
+    private static final String CSV = "csv";
+    private static final String JSON = "json";
+    private static final String YAML = "yaml";
 
 
 
-    public App(CommandLine cmd) throws FileNotFoundException {
+    public App(CommandLine cmd) throws IOException {
         // initialize input
         String inputFile = cmd.getOptionValue(INPUT_FILE);
         Path inputPath = Paths.get(inputFile);
         inputReader = Files.newBufferedReader(inputPath);
+
+        this.inputFormat = cmd.hasOption(INPUT_FORMAT) ? cmd.getOptionValue(INPUT_FORMAT) : FilenameUtils.getExtension(inputFile);
 
         // initialize output
         if (cmd.hasOption(OUTPUT_FILE)) {
@@ -64,14 +71,17 @@ public class App {
             Path outputPath = Paths.get(outputFile);
             try {
                 this.outputWriter = Files.newBufferedWriter(outputPath);
+                this.outputFormat = cmd.hasOption(OUTPUT_FORMAT) ? cmd.getOptionValue(OUTPUT_FORMAT) : FilenameUtils.getExtension(outputFile);
             } catch (IOException e) {
                 logger.warning(String.format("File %s not found. Printing output to stdout.",
                         outputPath.toString()));
                 this.outputWriter = new BufferedWriter(new OutputStreamWriter(System.out));
+                this.outputFormat = cmd.hasOption(OUTPUT_FORMAT) ? cmd.getOptionValue(OUTPUT_FORMAT) : JSON;
             }
         } else {
             // write to std out if no file was given
             this.outputWriter = new BufferedWriter(new OutputStreamWriter(System.out));
+            this.outputFormat = cmd.hasOption(OUTPUT_FORMAT) ? cmd.getOptionValue(OUTPUT_FORMAT) : JSON;
         }
 
         // initialize config
@@ -80,10 +90,10 @@ public class App {
 
         String schemaFormat = cmd.hasOption(SCHEMA_FORMAT) ? cmd.getOptionValue(SCHEMA_FORMAT) : FilenameUtils.getExtension(schemaFile);
         switch (schemaFormat) {
-            case "yaml":
+            case YAML:
                 this.schema = ConfigurationReader.readSchemaYaml(schemaFile).asSchema();
                 break;
-            case "json":
+            case JSON:
             default:
                 this.schema = ConfigurationReader.readSchemaJson(schemaFile).asSchema();
         }
@@ -91,10 +101,10 @@ public class App {
         MeasurementConfiguration measurementConfig;
         String measurementFormat = cmd.hasOption(MEASUREMENTS_FORMAT) ? cmd.getOptionValue(MEASUREMENTS_FORMAT) : FilenameUtils.getExtension(measurementFile);
         switch (measurementFormat) {
-            case "yaml":
+            case YAML:
                 measurementConfig = ConfigurationReader.readMeasurementYaml(measurementFile);
                 break;
-            case "json":
+            case JSON:
             default:
                 measurementConfig = ConfigurationReader.readMeasurementJson(measurementFile);
         }
