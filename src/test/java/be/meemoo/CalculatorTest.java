@@ -2,6 +2,7 @@ package be.meemoo;
 
 import de.gwdg.metadataqa.api.calculator.CalculatorFacade;
 import de.gwdg.metadataqa.api.configuration.ConfigurationReader;
+import de.gwdg.metadataqa.api.configuration.MeasurementConfiguration;
 import de.gwdg.metadataqa.api.json.JsonBranch;
 import de.gwdg.metadataqa.api.model.Category;
 import de.gwdg.metadataqa.api.schema.BaseSchema;
@@ -43,16 +44,17 @@ public class CalculatorTest {
       )
       ;
 
-    CalculatorFacade calculator = new CalculatorFacade()
+    // we will measure completeness now
+    MeasurementConfiguration config = new MeasurementConfiguration();
+    config.enableCompletenessMeasurement().disableFieldCardinalityMeasurement();
+
+    CalculatorFacade calculator = new CalculatorFacade(config)
       // set the schema which describes the source
       .setSchema(schema)
       // right now it is a CSV source, so we set how to parse it
       .setCsvReader(
         new CsvReader()
-          .setHeader(((CsvAwareSchema) schema).getHeader()))
-      // we will measure completeness now
-      .enableCompletenessMeasurement()
-      .disableFieldCardinalityMeasurement();
+          .setHeader(((CsvAwareSchema) schema).getHeader()));
 
     assertEquals(
       Arrays.asList(
@@ -190,23 +192,23 @@ public class CalculatorTest {
   @Test
   public void testMeasurement_withYamlSchema() throws FileNotFoundException {
     Schema schema = ConfigurationReader
-      .readYaml(
+      .readSchemaYaml(
         "src/test/resources/schema/meemoo.csv.yaml"
       )
      .asSchema();
 
-    CalculatorFacade calculator = new CalculatorFacade()
+    MeasurementConfiguration config = new MeasurementConfiguration();
+    config.enableCompletenessMeasurement()
+            .disableFieldCardinalityMeasurement()
+            .enableRuleCatalogMeasurement();
+
+    CalculatorFacade calculator = new CalculatorFacade(config)
       // set the schema which describes the source
       .setSchema(schema)
       // right now it is a CSV source, so we set how to parse it
       .setCsvReader(
         new CsvReader()
-          .setHeader(((CsvAwareSchema) schema).getHeader()))
-      // we will measure completeness now
-      .enableCompletenessMeasurement()
-      .disableFieldCardinalityMeasurement()
-      .enableRuleCatalogMeasurement()
-    ;
+          .setHeader(((CsvAwareSchema) schema).getHeader()));
 
     String fileName = "src/test/resources/csv/head.csv";
     File inputFile = new File(fileName);

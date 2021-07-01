@@ -7,12 +7,10 @@ import com.opencsv.exceptions.CsvValidationException;
 import de.gwdg.metadataqa.api.calculator.CalculatorFacade;
 import de.gwdg.metadataqa.api.configuration.ConfigurationReader;
 import de.gwdg.metadataqa.api.configuration.MeasurementConfiguration;
-import de.gwdg.metadataqa.api.schema.BaseSchema;
 import de.gwdg.metadataqa.api.schema.Schema;
 import de.gwdg.metadataqa.api.util.CsvReader;
 import org.apache.commons.cli.*;
 import org.apache.commons.io.FilenameUtils;
-import org.json.JSONObject;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -34,7 +32,6 @@ public class App {
 
     private final CalculatorFacade calculator;
     private final BufferedReader inputReader;
-    private final List<String> headerList;
     private String outputFormat;
     private BufferedWriter outputWriter;
 
@@ -103,13 +100,19 @@ public class App {
                 measurementConfig = ConfigurationReader.readMeasurementJson(measurementFile);
         }
 
-
         this.calculator = new CalculatorFacade(measurementConfig)
                 // set the schema which describes the source
                 .setSchema(this.schema);
 
-        String[] headers = cmd.getOptionValues(HEADERS_CONFIG);
-        this.headerList = headers != null ? Arrays.asList(headers) : new ArrayList<String>();
+
+        // Set the fields supplied by the command line to extractable fields
+        if (cmd.hasOption(HEADERS_CONFIG)) {
+            String[] headers = cmd.getOptionValues(HEADERS_CONFIG);
+            for (String h : headers){
+                this.schema.addExtractableField(h, this.schema.getPathByLabel(h).getJsonPath());
+            }
+
+        }
 
     }
 
@@ -133,29 +136,26 @@ public class App {
         // create the parser
         CommandLineParser parser = new DefaultParser();
 
-        // create help formatter
-        HelpFormatter formatter = new HelpFormatter();
-
         // Check how many arguments were passed in
         if (args.length == 0 || args.length < 3) {
-            formatter.printHelp("java -jar target/meemoo-qa-api-1.0-SNAPSHOT-shaded.jar", options);
-            System.exit(0);
+            printHelp(options);
         }
 
         try {
             // parse the command line arguments
             CommandLine cmd = parser.parse(options, args);
             new App(cmd).run();
-        } catch (ParseException exp) {
-            formatter.printHelp("java -jar target/meemoo-qa-api-1.0-SNAPSHOT-shaded.jar", options);
-            // oops, something went wrong
-            System.err.println("Parsing failed.  Reason: " + exp.getMessage());
         } catch (Exception ex) {
             System.err.println("Error: " + ex.getMessage());
+            printHelp(options);
         }
-        finally {
-            formatter.printHelp("java -jar target/meemoo-qa-api-1.0-SNAPSHOT-shaded.jar", options);
-        }
+    }
+
+    private static void printHelp(Options options) {
+        // create help formatter
+        HelpFormatter formatter = new HelpFormatter();
+        formatter.printHelp("java -jar target/metadata-qa-api-cmd-1.0-SNAPSHOT-shaded.jar", options);
+        System.exit(0);
     }
 
     public void run() {
@@ -163,30 +163,35 @@ public class App {
         try {
             switch (outputFormat) {
                 case CSV:
-                    final CSVWriter csvWriter = new CSVWriter(outputWriter);
-                    printCsvHeader(csvWriter);
-
                     switch (this.schema.getFormat()) {
                         case CSV:
-                            runCSV(csvWriter);
+                            processCSVasCSV();
                             break;
                         case JSON:
-                            runJSON(csvWriter);
+                            processCSVasJSON();
                             break;
                     }
 
                 case JSON:
-
+                    switch (this.schema.getFormat()) {
+                        case CSV:
+                            processJSONasCSV();
+                            break;
+                        case JSON:
+                            processJSONasJSON();
+                            break;
+                    }
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
+
+
     private void printCsvHeader(CSVWriter csvWriter){
         // print header
         List<String> header = new ArrayList<>();
-        header.addAll(headerList); // Add all headers that need to be copied from source
         header.addAll(calculator.getHeader());
         // Switch headers
         List<String> outputHeader = header.stream()
@@ -196,27 +201,55 @@ public class App {
         csvWriter.writeNext(outputHeader.toArray(new String[0]));
     }
 
-    public void runJSON(CSVWriter csvWriter) throws IOException {
+
+    public void processJSONasCSV() throws IOException {
+        final CSVWriter csvWriter = new CSVWriter(outputWriter);
+        printCsvHeader(csvWriter);
+
+        long counter = 0;
+        String record = null;
+        while ((record = inputReader.readLine()) != null) {
+            try {
+
+                // Add QA results
+                List<String> results = calculator.measureAsList(record);
+
+                // Write results to CSV
+                csvWriter.writeNext(results.toArray(new String[0]));
+
+                // update process
+                counter++;
+                if (counter % 50 == 0) {
+                    logger.info(String.format("Processed %s records. ", counter));
+                }
+            } catch (InvalidJsonException e) {
+                // handle exception
+                logger.severe(String.format("Invalid JSON: %s. Error message: %s.", record, e.getLocalizedMessage()));
+            } catch (Exception e) {
+                e.printStackTrace();
+                throw e;
+            }
+        }
+
+        csvWriter.close();
+    }
+
+    public void processJSONasJSON() throws IOException {
         long counter = 0;
 
         String record = null;
         while ((record = inputReader.readLine()) != null) {
             try {
-                JSONObject obj = new JSONObject(record);
+                // Add QA results
+                String s = calculator.measureAsJson(record);
 
-                List<String> results = new ArrayList<>();
-                for (String h : headerList){
-                    results.add(obj.getString(h));
-                }
+                outputWriter.write(s);
+                outputWriter.newLine();
 
-                results.addAll(calculator.measureAsList(record)); // Add QA results
-
-                // Write results
-                csvWriter.writeNext(results.toArray(new String[0]));
                 // update process
                 counter++;
                 if (counter % 50 == 0) {
-                    logger.info(String.format("Assessed fragment %s. Processed %s records. ", obj.getString("fragment_id_mam"), counter));
+                    logger.info(String.format("Processed %s records. ", counter));
                 }
             } catch (InvalidJsonException e) {
                 // handle exception
@@ -228,10 +261,13 @@ public class App {
         }
 
         logger.info(String.format("Assessment completed successfully with %s records. ", counter));
-        csvWriter.close();
+        outputWriter.close();
     }
 
-    public void runCSV(CSVWriter csvWriter) throws IOException {
+    public void processCSVasCSV() throws IOException {
+
+        final CSVWriter csvWriter = new CSVWriter(outputWriter);
+        printCsvHeader(csvWriter);
 
         // Configure input
         final CSVReader csvReader = new CSVReader(inputReader);
@@ -240,10 +276,6 @@ public class App {
         try {
             // read header
             final List<String> header = Arrays.asList(csvReader.readNext());
-            // get indexes from headers to copy
-            final List<Integer> headerListIndexes = headerList.stream()
-                    .map(s -> header.indexOf(s))
-                    .collect(Collectors.toList());
 
             // right now it is a CSV source, so we set how to parse it
             this.calculator.setCsvReader(
@@ -252,19 +284,16 @@ public class App {
             String[] record = null;
             while ((record = csvReader.readNext()) != null) {
                 try {
-                    List<String> strings = Arrays.asList(record);
-                    List<String> results = new ArrayList<>();
-                    // add copied headers to results first
-                    headerListIndexes.forEach(i -> results.add(strings.get(i)));
-                    // Add QA results
-                    results.addAll(calculator.measureAsList(strings));
+                    final List<String> strings = Arrays.asList(record);
+                    final List<String> results = calculator.measureAsList(strings);
 
                     // Write results to CSV
                     csvWriter.writeNext(results.toArray(new String[0]));
+
                     // update process
                     counter++;
                     if (counter % 50 == 0) {
-                        logger.info(String.format("Assessed fragment %s. Processed %s records. ", strings.get(0), counter));
+                        logger.info(String.format("Processed %s records. ", counter));
                     }
                 } catch (InvalidJsonException e) {
                     // handle exception
@@ -287,6 +316,54 @@ public class App {
 
     }
 
-}
+    public void processCSVasJSON() throws IOException {
 
+        // Configure input
+        final CSVReader csvReader = new CSVReader(inputReader);
+
+        long counter = 0;
+        try {
+            // read header
+            final List<String> header = Arrays.asList(csvReader.readNext());
+
+            // right now it is a CSV source, so we set how to parse it
+            this.calculator.setCsvReader(
+                    new CsvReader().setHeader(header));
+
+            String[] record = null;
+            while ((record = csvReader.readNext()) != null) {
+                try {
+                    final List<String> strings = Arrays.asList(record);
+                    final String s = calculator.measureAsJson(strings);
+
+                    outputWriter.write(s);
+                    outputWriter.newLine();
+
+                    // update process
+                    counter++;
+                    if (counter % 50 == 0) {
+                        logger.info(String.format("Processed %s records. ", counter));
+                    }
+                } catch (InvalidJsonException e) {
+                    // handle exception
+                    logger.severe(String.format("Invalid JSON: %s. Error message: %s.", record, e.getLocalizedMessage()));
+                } catch (Exception e) {
+                    logger.severe(String.format("Measurement failed at record %s with %s columns (expected %s)", counter + 1, record.length, this.calculator.getHeader().size()));
+                    logger.severe(Arrays.toString(record));
+                    e.printStackTrace();
+                    throw e;
+                }
+            }
+
+            logger.info(String.format("Assessment completed successfully with %s records. ", counter));
+        } catch (CsvValidationException e) {
+            logger.severe(String.format("Assessment failed with %s records. ", counter));
+            e.printStackTrace();
+        } finally {
+            outputWriter.close();
+        }
+
+    }
+
+}
 
