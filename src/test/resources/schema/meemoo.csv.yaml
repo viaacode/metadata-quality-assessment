@@ -4,11 +4,11 @@ fields:
     categories: [MANDATORY]
     extractable: true
     rules:
-      pattern: ^[0-9a-f]+$
+      - pattern: ^[0-9a-f]+$
   - name: mediaobject_id_mam
     # this rule is just for generating validation errors
     rules:
-      pattern: ^\d+$
+      - pattern: ^\d+$
   - name: cp
     categories: [MANDATORY]
     extractable: true
@@ -34,5 +34,5 @@ fields:
   - name: dcterms_created
     # this rule is just for generating validation errors
     rules:
-      pattern: ^\d{4}-\d{2}-\d{2}$
+      - pattern: ^\d{4}-\d{2}-\d{2}$
   - name: dcterms_issued

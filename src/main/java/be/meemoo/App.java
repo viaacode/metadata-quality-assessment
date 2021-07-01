@@ -167,19 +167,21 @@ public class App {
                         processCSVasCSV();
                         break;
                     case JSON:
-                        processCSVasJSON();
+                        processJSONasCSV();
                         break;
                 }
-
+                break;
             case JSON:
+            default:
                 switch (this.schema.getFormat()) {
                     case CSV:
-                        processJSONasCSV();
+                        processCSVasJSON();
                         break;
                     case JSON:
                         processJSONasJSON();
                         break;
                 }
+                break;
         }
     }
 
@@ -203,7 +205,6 @@ public class App {
         String record = null;
         while ((record = inputReader.readLine()) != null) {
             try {
-
                 // Add QA results
                 List<String> results = calculator.measureAsList(record);
 
@@ -355,8 +356,6 @@ public class App {
         } finally {
             outputWriter.close();
         }
-
     }
-
 }
 
