@@ -12,7 +12,10 @@ import de.gwdg.metadataqa.api.util.CsvReader;
 import org.apache.commons.cli.*;
 import org.apache.commons.io.FilenameUtils;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -29,14 +32,6 @@ import java.util.stream.Collectors;
 public class App {
 
     private static final Logger logger = Logger.getLogger(App.class.getCanonicalName());
-
-    private final CalculatorFacade calculator;
-    private final BufferedReader inputReader;
-    private String outputFormat;
-    private BufferedWriter outputWriter;
-
-    private Schema schema;
-
     // Arguments
     private static final String INPUT_FILE = "input";
     private static final String OUTPUT_FILE = "output";
@@ -49,6 +44,11 @@ public class App {
     private static final String CSV = "csv";
     private static final String JSON = "json";
     private static final String YAML = "yaml";
+    private final CalculatorFacade calculator;
+    private final BufferedReader inputReader;
+    private final Schema schema;
+    private String outputFormat;
+    private BufferedWriter outputWriter;
 
     public App(CommandLine cmd) throws IOException {
         // initialize input
@@ -65,7 +65,7 @@ public class App {
                 this.outputFormat = cmd.hasOption(OUTPUT_FORMAT) ? cmd.getOptionValue(OUTPUT_FORMAT) : FilenameUtils.getExtension(outputFile);
             } catch (IOException e) {
                 logger.warning(String.format("File %s not found. Printing output to stdout.",
-                        outputPath.toString()));
+                        outputPath));
                 this.outputWriter = new BufferedWriter(new OutputStreamWriter(System.out));
                 this.outputFormat = cmd.getOptionValue(OUTPUT_FORMAT, JSON);
             }
@@ -77,7 +77,6 @@ public class App {
 
         // initialize config
         String schemaFile = cmd.getOptionValue(SCHEMA_CONFIG);
-        String measurementFile = cmd.getOptionValue(MEASUREMENTS_CONFIG);
 
         String schemaFormat = cmd.getOptionValue(SCHEMA_FORMAT, FilenameUtils.getExtension(schemaFile));
         switch (schemaFormat) {
@@ -89,15 +88,18 @@ public class App {
                 this.schema = ConfigurationReader.readSchemaJson(schemaFile).asSchema();
         }
 
-        MeasurementConfiguration measurementConfig;
-        String measurementFormat = cmd.getOptionValue(MEASUREMENTS_FORMAT, FilenameUtils.getExtension(measurementFile));
-        switch (measurementFormat) {
-            case YAML:
-                measurementConfig = ConfigurationReader.readMeasurementYaml(measurementFile);
-                break;
-            case JSON:
-            default:
-                measurementConfig = ConfigurationReader.readMeasurementJson(measurementFile);
+        MeasurementConfiguration measurementConfig = new MeasurementConfiguration();
+        if (cmd.hasOption(MEASUREMENTS_CONFIG)) {
+            String measurementFile = cmd.getOptionValue(MEASUREMENTS_CONFIG);
+            String measurementFormat = cmd.getOptionValue(MEASUREMENTS_FORMAT, FilenameUtils.getExtension(measurementFile));
+            switch (measurementFormat) {
+                case YAML:
+                    measurementConfig = ConfigurationReader.readMeasurementYaml(measurementFile);
+                    break;
+                case JSON:
+                default:
+                    measurementConfig = ConfigurationReader.readMeasurementJson(measurementFile);
+            }
         }
 
         this.calculator = new CalculatorFacade(measurementConfig)
@@ -108,15 +110,13 @@ public class App {
         // Set the fields supplied by the command line to extractable fields
         if (cmd.hasOption(HEADERS_CONFIG)) {
             String[] headers = cmd.getOptionValues(HEADERS_CONFIG);
-            for (String h : headers){
+            for (String h : headers) {
                 this.schema.addExtractableField(h, this.schema.getPathByLabel(h).getJsonPath());
             }
-
         }
-
     }
 
-    public static void main(String[] args) throws FileNotFoundException {
+    public static void main(String[] args) {
 
         // Take input file
 
@@ -129,8 +129,9 @@ public class App {
         options.addOption(new Option("m", MEASUREMENTS_CONFIG, true, "Config file for measurements."));
         options.addOption(new Option("w", MEASUREMENTS_FORMAT, true, "Format of measurements file."));
 
-        options.addOption(new Option("o", OUTPUT_FILE, false, "Output file."));
-        options.addOption(new Option("f", OUTPUT_FORMAT, true, "Output file."));
+        options.addOption(new Option("o", OUTPUT_FILE, true, "Output file."));
+        options.addOption(new Option("f", OUTPUT_FORMAT, true, "Output format."));
+
         options.addOption(new Option("h", HEADERS_CONFIG, true, "Headers to copy from source"));
 
         // create the parser
@@ -158,49 +159,41 @@ public class App {
         System.exit(0);
     }
 
-    public void run() {
+    public void run() throws IOException {
+        switch (outputFormat) {
+            case CSV:
+                switch (this.schema.getFormat()) {
+                    case CSV:
+                        processCSVasCSV();
+                        break;
+                    case JSON:
+                        processCSVasJSON();
+                        break;
+                }
 
-        try {
-            switch (outputFormat) {
-                case CSV:
-                    switch (this.schema.getFormat()) {
-                        case CSV:
-                            processCSVasCSV();
-                            break;
-                        case JSON:
-                            processCSVasJSON();
-                            break;
-                    }
-
-                case JSON:
-                    switch (this.schema.getFormat()) {
-                        case CSV:
-                            processJSONasCSV();
-                            break;
-                        case JSON:
-                            processJSONasJSON();
-                            break;
-                    }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
+            case JSON:
+                switch (this.schema.getFormat()) {
+                    case CSV:
+                        processJSONasCSV();
+                        break;
+                    case JSON:
+                        processJSONasJSON();
+                        break;
+                }
         }
     }
 
-
-
-    private void printCsvHeader(CSVWriter csvWriter){
+    private void printCsvHeader(CSVWriter csvWriter) {
         // print header
         List<String> header = new ArrayList<>();
         header.addAll(calculator.getHeader());
         // Switch headers
         List<String> outputHeader = header.stream()
-                .map(s -> s.replaceAll("(:|/|\\.)","_")
+                .map(s -> s.replaceAll("(:|/|\\.)", "_")
                         .toLowerCase()).collect(Collectors.toList());
 
         csvWriter.writeNext(outputHeader.toArray(new String[0]));
     }
-
 
     public void processJSONasCSV() throws IOException {
         final CSVWriter csvWriter = new CSVWriter(outputWriter);
@@ -350,7 +343,7 @@ public class App {
                 } catch (Exception e) {
                     logger.severe(String.format("Measurement failed at record %s with %s columns (expected %s)", counter + 1, record.length, this.calculator.getHeader().size()));
                     logger.severe(Arrays.toString(record));
-                    e.printStackTrace();
+                    logger.severe(e.getMessage());
                     throw e;
                 }
             }
@@ -358,7 +351,7 @@ public class App {
             logger.info(String.format("Assessment completed successfully with %s records. ", counter));
         } catch (CsvValidationException e) {
             logger.severe(String.format("Assessment failed with %s records. ", counter));
-            e.printStackTrace();
+            logger.severe(e.getMessage());
         } finally {
             outputWriter.close();
         }
