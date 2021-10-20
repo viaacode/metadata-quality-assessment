@@ -7,6 +7,9 @@
     <groupId>be.meemoo</groupId>
     <artifactId>metadata-qa-api-cmd</artifactId>
     <version>0.1-SNAPSHOT</version>
+    <properties>
+        <skipTests>true</skipTests>
+    </properties>
     <build>
         <plugins>
             <plugin>
@@ -15,6 +18,14 @@
                 <configuration>
                     <source>11</source>
                     <target>11</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.22.1</version>
+                <configuration>
+                    <skipTests>${skipTests}</skipTests>
                 </configuration>
             </plugin>
             <plugin>
