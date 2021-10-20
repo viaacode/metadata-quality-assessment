@@ -31,7 +31,7 @@ public class JSONResultWriter extends ResultWriter {
         }
 
         try {
-            return JsonUtils.toJson(result);
+            return JsonUtils.toJson(output);
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
