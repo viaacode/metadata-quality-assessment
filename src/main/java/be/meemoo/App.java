@@ -24,8 +24,7 @@ public class App {
     private static final Logger logger = Logger.getLogger(App.class.getCanonicalName());
 
     private static final String appName = "mqa";
-    private static final String appHeader = "Command-line application for Péter Kiraly's Metadata Quality API (https://github.com/pkiraly/metadata-qa-api). Read line-based metadata records and output quality assessment results using vairous metrics.";
-
+    private static final String appHeader = "Command-line application for Péter Kiraly's Metadata Quality API (https://github.com/pkiraly/metadata-qa-api). Read line-based metadata records and output quality assessment results using various metrics.";
 
     // Arguments
     private static final String INPUT_FILE = "input";
@@ -89,7 +88,7 @@ public class App {
         this.inputReader = RecordFactory.getRecordReader(inputFile, calculator);
 
         // initialize output
-        String outFormat = cmd.getOptionValue(OUTPUT_FORMAT);
+        String outFormat = cmd.getOptionValue(OUTPUT_FORMAT, JSON);
         // write to std out if no file was given
         this.outputWriter = cmd.hasOption(OUTPUT_FILE) ? RecordFactory.getResultWriter(outFormat, cmd.getOptionValue(OUTPUT_FILE)) : RecordFactory.getResultWriter(outFormat);
     }
@@ -108,8 +107,8 @@ public class App {
 
         Option outputOption = Option.builder("o")
                 .numberOfArgs(1)
-                .required(true)
-                .longOpt(INPUT_FILE)
+                .required(false)
+                .longOpt(OUTPUT_FILE)
                 .desc("Output file.")
                 .build();
 
@@ -117,7 +116,7 @@ public class App {
                 .numberOfArgs(1)
                 .required(false)
                 .longOpt(OUTPUT_FORMAT)
-                .desc("Format of the output: json, csv.")
+                .desc("Format of the output: ndjson, csv. Default: ndjson.")
                 .build();
 
         Option schemaConfigOption = Option.builder("s")
@@ -131,7 +130,7 @@ public class App {
                 .numberOfArgs(1)
                 .required(false)
                 .longOpt(SCHEMA_FORMAT)
-                .desc("Format of schema file: json, yaml.")
+                .desc("Format of schema file: json, yaml. Default: based on file extension, else json.")
                 .build();
 
         Option measurementsConfigOption = Option.builder("m")
@@ -145,7 +144,7 @@ public class App {
                 .numberOfArgs(1)
                 .required(false)
                 .longOpt(MEASUREMENTS_FORMAT)
-                .desc("Format of measurements config file: json, yaml.")
+                .desc("Format of measurements config file: json, yaml. Default: based on file extension, else json.")
                 .build();
 
         Option headersOption = Option.builder("h")
@@ -174,17 +173,15 @@ public class App {
             // parse the command line arguments
             CommandLine cmd = parser.parse(options, args);
             new App(cmd).run();
-        }
-        catch (MissingOptionException ex) {
+        } catch (MissingOptionException ex) {
             formatter.printHelp(appName, appHeader, options, "Options missing: " + ex.getMissingOptions().toString(), true);
             System.exit(0);
-        }
-        catch (MissingArgumentException ex) {
-            formatter.printHelp(appName, appHeader,  options,  "Arguments missing: " + ex.getOption().toString(),true);
+        } catch (MissingArgumentException ex) {
+            formatter.printHelp(appName, appHeader, options, "Arguments missing: " + ex.getOption().getArgName(), true);
             System.exit(0);
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             formatter.printHelp(appName, appHeader, options, "Error: " + ex.getMessage(), true);
+            ex.printStackTrace();
             System.exit(0);
         }
     }
@@ -198,7 +195,6 @@ public class App {
             outputWriter.writeHeader(header);
 
             while (inputReader.hasNext()) {
-
 
                 Map<String, List<MetricResult>> measurement = inputReader.next();
                 outputWriter.writeResult(measurement);
@@ -217,5 +213,7 @@ public class App {
             logger.severe(e.getMessage());
         }
     }
+
+
 }
 

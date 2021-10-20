@@ -38,7 +38,6 @@ public class RecordFactory {
                 return new JSONResultWriter(outputFile);
         }
 
-
         return new CSVResultWriter(outputFile);
     }
 
