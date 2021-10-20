@@ -94,18 +94,14 @@ public class App {
         // Take input file
 
         final Options options = new Options();
-        options.addOption(new Option("i", INPUT_FILE, true, "Input file."));
-
-        options.addOption(new Option("s", SCHEMA_CONFIG, true, "Schema file to run assessment against."));
-        options.addOption(new Option("v", SCHEMA_FORMAT, true, "Format of schema file."));
-
-        options.addOption(new Option("m", MEASUREMENTS_CONFIG, true, "Config file for measurements."));
-        options.addOption(new Option("w", MEASUREMENTS_FORMAT, true, "Format of measurements file."));
-
-        options.addOption(new Option("o", OUTPUT_FILE, true, "Output file."));
-        options.addOption(new Option("f", OUTPUT_FORMAT, true, "Output format."));
-
-        options.addOption(new Option("h", HEADERS_CONFIG, true, "Headers to copy from source"));
+        options.addOption("i", INPUT_FILE, true, "Input file.");
+        options.addOption("s", SCHEMA_CONFIG, true, "Schema file to run assessment against.");
+        options.addOption("v", SCHEMA_FORMAT, true, "Format of schema file.");
+        options.addOption("m", MEASUREMENTS_CONFIG, true, "Config file for measurements.");
+        options.addOption("w", MEASUREMENTS_FORMAT, true, "Format of measurements file.");
+        options.addOption("o", OUTPUT_FILE, true, "Output file.");
+        options.addOption("f", OUTPUT_FORMAT, true, "Output format.");
+        options.addOption("h", HEADERS_CONFIG, true, "Headers to copy from source");
 
         // create the parser
         CommandLineParser parser = new DefaultParser();

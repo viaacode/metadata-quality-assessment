@@ -220,8 +220,7 @@ public class CalculatorTest {
         "existence:sp_name", "existence:pid", "existence:dc_description", "existence:dc_format",
         "existence:dc_publisher", "existence:dc_source", "existence:dc_terms",
         "existence:dc_title", "existence:dcterms_abstract", "existence:dcterms_created",
-        "existence:dcterms_issued",
-              "rule:fragment_id_mam:pattern:1", "rule:mediaobject_id_mam:pattern:2", "rule:dcterms_created:pattern:3", "ruleCatalog:score"
+        "existence:dcterms_issued", "fragment_id_mam:pattern:1", "mediaobject_id_mam:pattern:2", "dcterms_created:pattern:3", "ruleCatalog:score"
       ),
       calculator.getHeader()
     );
