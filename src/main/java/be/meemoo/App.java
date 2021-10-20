@@ -22,6 +22,11 @@ import java.util.logging.Logger;
 public class App {
 
     private static final Logger logger = Logger.getLogger(App.class.getCanonicalName());
+
+    private static final String appName = "mqa";
+    private static final String appHeader = "Command-line application for Péter Kiraly's Metadata Quality API (https://github.com/pkiraly/metadata-qa-api). Read line-based metadata records and output quality assessment results using vairous metrics.";
+
+
     // Arguments
     private static final String INPUT_FILE = "input";
     private static final String OUTPUT_FILE = "output";
@@ -92,40 +97,96 @@ public class App {
     public static void main(String[] args) {
 
         // Take input file
-
         final Options options = new Options();
-        options.addOption("i", INPUT_FILE, true, "Input file.");
-        options.addOption("s", SCHEMA_CONFIG, true, "Schema file to run assessment against.");
-        options.addOption("v", SCHEMA_FORMAT, true, "Format of schema file.");
-        options.addOption("m", MEASUREMENTS_CONFIG, true, "Config file for measurements.");
-        options.addOption("w", MEASUREMENTS_FORMAT, true, "Format of measurements file.");
-        options.addOption("o", OUTPUT_FILE, true, "Output file.");
-        options.addOption("f", OUTPUT_FORMAT, true, "Output format.");
-        options.addOption("h", HEADERS_CONFIG, true, "Headers to copy from source");
+
+        Option inputOption = Option.builder("i")
+                .numberOfArgs(1)
+                .required(true)
+                .longOpt(INPUT_FILE)
+                .desc("Input file.")
+                .build();
+
+        Option outputOption = Option.builder("o")
+                .numberOfArgs(1)
+                .required(true)
+                .longOpt(INPUT_FILE)
+                .desc("Output file.")
+                .build();
+
+        Option outputFormatOption = Option.builder("f")
+                .numberOfArgs(1)
+                .required(false)
+                .longOpt(OUTPUT_FORMAT)
+                .desc("Format of the output: json, csv.")
+                .build();
+
+        Option schemaConfigOption = Option.builder("s")
+                .numberOfArgs(1)
+                .required(true)
+                .longOpt(SCHEMA_CONFIG)
+                .desc("Schema file to run assessment against.")
+                .build();
+
+        Option schemaFormatOption = Option.builder("v")
+                .numberOfArgs(1)
+                .required(false)
+                .longOpt(SCHEMA_FORMAT)
+                .desc("Format of schema file: json, yaml.")
+                .build();
+
+        Option measurementsConfigOption = Option.builder("m")
+                .numberOfArgs(1)
+                .required(true)
+                .longOpt(MEASUREMENTS_CONFIG)
+                .desc("Config file for measurements.")
+                .build();
+
+        Option measurementsFormatOption = Option.builder("w")
+                .numberOfArgs(1)
+                .required(false)
+                .longOpt(MEASUREMENTS_FORMAT)
+                .desc("Format of measurements config file: json, yaml.")
+                .build();
+
+        Option headersOption = Option.builder("h")
+                .hasArgs()
+                .required(false)
+                .longOpt(HEADERS_CONFIG)
+                .desc("Headers to copy from source")
+                .build();
+
+        options.addOption(inputOption);
+        options.addOption(outputOption);
+        options.addOption(outputFormatOption);
+        options.addOption(schemaConfigOption);
+        options.addOption(schemaFormatOption);
+        options.addOption(measurementsConfigOption);
+        options.addOption(measurementsFormatOption);
+        options.addOption(headersOption);
 
         // create the parser
         CommandLineParser parser = new DefaultParser();
 
-        // Check how many arguments were passed in
-        if (args.length == 0 || args.length < 3) {
-            printHelp(options);
-        }
+        // create the formatter
+        HelpFormatter formatter = new HelpFormatter();
 
         try {
             // parse the command line arguments
             CommandLine cmd = parser.parse(options, args);
             new App(cmd).run();
-        } catch (Exception ex) {
-            System.err.println("Error: " + ex.getMessage());
-            printHelp(options);
         }
-    }
-
-    private static void printHelp(Options options) {
-        // create help formatter
-        HelpFormatter formatter = new HelpFormatter();
-        formatter.printHelp("java -jar target/metadata-qa-api-cmd-1.0-SNAPSHOT-shaded.jar", options);
-        System.exit(0);
+        catch (MissingOptionException ex) {
+            formatter.printHelp(appName, appHeader, options, "Options missing: " + ex.getMissingOptions().toString(), true);
+            System.exit(0);
+        }
+        catch (MissingArgumentException ex) {
+            formatter.printHelp(appName, appHeader,  options,  "Arguments missing: " + ex.getOption().toString(),true);
+            System.exit(0);
+        }
+        catch (Exception ex) {
+            formatter.printHelp(appName, appHeader, options, "Error: " + ex.getMessage(), true);
+            System.exit(0);
+        }
     }
 
     private void run() {
