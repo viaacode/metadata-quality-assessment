@@ -10,9 +10,7 @@ import org.apache.commons.cli.*;
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Logger;
 
 
@@ -190,8 +188,9 @@ public class App {
         long counter = 0;
         try {
             // print header
-            List<String> header = new ArrayList<>();
-            header.addAll(calculator.getHeader());
+            List<String> header = calculator.getHeader();
+            // TODO: workaround for duplicate header names in csv
+            header = new ArrayList<>(new LinkedHashSet<>(header));
             outputWriter.writeHeader(header);
 
             while (inputReader.hasNext()) {
