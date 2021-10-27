@@ -22,7 +22,7 @@ public class App {
     private static final Logger logger = Logger.getLogger(App.class.getCanonicalName());
 
     private static final String appName = "mqa";
-    private static final String appHeader = "Command-line application for Péter Kiraly's Metadata Quality API (https://github.com/pkiraly/metadata-qa-api). Read line-based metadata records and output quality assessment results using various metrics.";
+    private static final String appHeader = "Command-line application for the Metadata Quality API (https://github.com/pkiraly/metadata-qa-api). Read line-based metadata records and output quality assessment results using various metrics.";
 
     // Arguments
     private static final String INPUT_FILE = "input";
