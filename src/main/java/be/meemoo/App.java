@@ -173,14 +173,14 @@ public class App {
             new App(cmd).run();
         } catch (MissingOptionException ex) {
             formatter.printHelp(appName, appHeader, options, "Options missing: " + ex.getMissingOptions().toString(), true);
-            System.exit(0);
+            System.exit(1);
         } catch (MissingArgumentException ex) {
             formatter.printHelp(appName, appHeader, options, "Arguments missing: " + ex.getOption().getArgName(), true);
-            System.exit(0);
+            System.exit(1);
         } catch (Exception ex) {
             formatter.printHelp(appName, appHeader, options, "Error: " + ex.getMessage(), true);
             ex.printStackTrace();
-            System.exit(0);
+            System.exit(1);
         }
     }
 
