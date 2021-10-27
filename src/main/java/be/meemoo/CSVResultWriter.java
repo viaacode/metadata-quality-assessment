@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 
 public class CSVResultWriter extends ResultWriter{
 
-    private final CSVWriter csvWriter;
+    protected final CSVWriter csvWriter;
 
     public CSVResultWriter(String outputFile) throws IOException {
         super(outputFile);

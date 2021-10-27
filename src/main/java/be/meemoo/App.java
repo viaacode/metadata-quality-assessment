@@ -114,7 +114,7 @@ public class App {
                 .numberOfArgs(1)
                 .required(false)
                 .longOpt(OUTPUT_FORMAT)
-                .desc("Format of the output: ndjson, csv. Default: ndjson.")
+                .desc("Format of the output: ndjson, csv, csvjson (json encoded in csv; useful for RDB bulk loading). Default: ndjson.")
                 .build();
 
         Option schemaConfigOption = Option.builder("s")

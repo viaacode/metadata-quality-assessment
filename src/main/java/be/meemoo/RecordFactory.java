@@ -34,8 +34,9 @@ public class RecordFactory {
             case "csv":
                 return new CSVResultWriter(outputFile);
             case "ndjson":
-            case "json":
                 return new JSONResultWriter(outputFile);
+                case "csvjson":
+                return new CSVJSONResultWriter(outputFile);
         }
 
         return new CSVResultWriter(outputFile);
@@ -45,8 +46,10 @@ public class RecordFactory {
         switch (outputFormat) {
             case "csv":
                 return new CSVResultWriter();
-            case "json":
+            case "ndjson":
                 return new JSONResultWriter();
+            case "csvjson":
+                return new CSVJSONResultWriter();
         }
         return new JSONResultWriter();
     }
