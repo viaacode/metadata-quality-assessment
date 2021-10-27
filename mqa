@@ -1,2 +1,2 @@
 #!/bin/bash
-java -jar target/metadata-qa-api-cmd-0.1-SNAPSHOT-shaded.jar $@
+java -jar $(dirname $(readlink -f $0))/target/metadata-qa-api-cmd-0.1-SNAPSHOT-shaded.jar $@
