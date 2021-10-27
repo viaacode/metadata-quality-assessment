@@ -24,6 +24,7 @@ abstract class ResultWriter implements Closeable {
 
     @Override
     public void close() throws IOException {
+        this.outputWriter.flush();
         this.outputWriter.close();
     }
 

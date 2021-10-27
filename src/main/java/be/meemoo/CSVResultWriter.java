@@ -16,12 +16,12 @@ public class CSVResultWriter extends ResultWriter{
 
     public CSVResultWriter(String outputFile) throws IOException {
         super(outputFile);
-        csvWriter = new CSVWriter(outputWriter);
+        this.csvWriter = new CSVWriter(outputWriter);
     }
 
     public CSVResultWriter() {
         super();
-        csvWriter = new CSVWriter(outputWriter);
+        this.csvWriter = new CSVWriter(outputWriter);
     }
 
     @Override
@@ -35,7 +35,7 @@ public class CSVResultWriter extends ResultWriter{
             }
 
         // Write results to CSV
-        csvWriter.writeNext(output.toArray(new String[0]));
+        this.csvWriter.writeNext(output.toArray(new String[0]));
     }
 
     @Override
@@ -44,11 +44,12 @@ public class CSVResultWriter extends ResultWriter{
         List<String> outputHeader = header.stream()
                 .map(s -> s.replaceAll("(:|/|\\.)", "_")
                         .toLowerCase()).collect(Collectors.toList());
-        csvWriter.writeNext(outputHeader.toArray(new String[0]));
+        this.csvWriter.writeNext(outputHeader.toArray(new String[0]));
     }
 
     @Override
     public void close() throws IOException {
-        csvWriter.close();
+        this.csvWriter.flush();
+        this.csvWriter.close();
     }
 }
