@@ -2,7 +2,6 @@ package be.meemoo;
 
 import com.opencsv.exceptions.CsvValidationException;
 import de.gwdg.metadataqa.api.calculator.CalculatorFacade;
-import de.gwdg.metadataqa.api.configuration.MeasurementConfiguration;
 import de.gwdg.metadataqa.api.schema.Schema;
 import org.apache.commons.io.FilenameUtils;
 
@@ -31,11 +30,11 @@ public class RecordFactory {
         }
 
         switch (outputFormat) {
-            case "csv":
+            case App.CSV:
                 return new CSVResultWriter(outputFile);
-            case "ndjson":
+            case App.NDJSON:
                 return new JSONResultWriter(outputFile);
-                case "csvjson":
+            case App.CSVJSON:
                 return new CSVJSONResultWriter(outputFile);
         }
 
@@ -44,14 +43,14 @@ public class RecordFactory {
 
     public static ResultWriter getResultWriter(String outputFormat) throws IOException {
         switch (outputFormat) {
-            case "csv":
+            case App.CSV:
                 return new CSVResultWriter();
-            case "ndjson":
+            case App.NDJSON:
                 return new JSONResultWriter();
-            case "csvjson":
+            case App.CSVJSON:
                 return new CSVJSONResultWriter();
         }
-        return new JSONResultWriter();
+        return new CSVResultWriter();
     }
 
 }

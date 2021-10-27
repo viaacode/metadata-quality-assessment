@@ -24,6 +24,13 @@ public class App {
     private static final String appName = "mqa";
     private static final String appHeader = "Command-line application for the Metadata Quality API (https://github.com/pkiraly/metadata-qa-api). Read line-based metadata records and output quality assessment results using various metrics.";
 
+    // constants
+    public static final String NDJSON = "ndjson";
+    public static final String CSVJSON = "csvjson";
+    public static final String CSV = "csv";
+    public static final String JSON = "json";
+    public static final String YAML = "yaml";
+
     // Arguments
     private static final String INPUT_FILE = "input";
     private static final String OUTPUT_FILE = "output";
@@ -33,8 +40,8 @@ public class App {
     private static final String MEASUREMENTS_CONFIG = "measurements";
     private static final String HEADERS_CONFIG = "headers";
     private static final String MEASUREMENTS_FORMAT = "measurementsFormat";
-    private static final String JSON = "json";
-    private static final String YAML = "yaml";
+
+
     private final Schema schema;
     private final CalculatorFacade calculator;
     private final ResultWriter outputWriter;
@@ -86,7 +93,7 @@ public class App {
         this.inputReader = RecordFactory.getRecordReader(inputFile, calculator);
 
         // initialize output
-        String outFormat = cmd.getOptionValue(OUTPUT_FORMAT, JSON);
+        String outFormat = cmd.getOptionValue(OUTPUT_FORMAT, NDJSON);
         // write to std out if no file was given
         this.outputWriter = cmd.hasOption(OUTPUT_FILE) ? RecordFactory.getResultWriter(outFormat, cmd.getOptionValue(OUTPUT_FILE)) : RecordFactory.getResultWriter(outFormat);
     }
