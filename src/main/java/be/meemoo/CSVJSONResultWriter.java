@@ -1,12 +1,9 @@
 package be.meemoo;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import de.gwdg.metadataqa.api.interfaces.MetricResult;
 import de.gwdg.metadataqa.api.json.JsonUtils;
-import de.gwdg.metadataqa.api.util.CompressionLevel;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;

@@ -196,8 +196,6 @@ public class App {
         try {
             // print header
             List<String> header = calculator.getHeader();
-            // TODO: workaround for duplicate header names in csv
-            header = new ArrayList<>(new LinkedHashSet<>(header));
             outputWriter.writeHeader(header);
 
             while (inputReader.hasNext()) {
@@ -213,7 +211,6 @@ public class App {
             }
             logger.info(String.format("Assessment completed successfully with %s records. ", counter));
             outputWriter.close();
-
         } catch (IOException e) {
             logger.severe(String.format("Assessment failed with %s records. ", counter));
             logger.severe(e.getMessage());

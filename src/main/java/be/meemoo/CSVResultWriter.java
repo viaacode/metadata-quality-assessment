@@ -17,6 +17,7 @@ public class CSVResultWriter extends ResultWriter{
     public CSVResultWriter(String outputFile) throws IOException {
         super(outputFile);
         this.csvWriter = new CSVWriter(outputWriter);
+
     }
 
     public CSVResultWriter() {
