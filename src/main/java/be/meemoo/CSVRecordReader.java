@@ -8,7 +8,9 @@ import de.gwdg.metadataqa.api.interfaces.MetricResult;
 import de.gwdg.metadataqa.api.schema.Schema;
 import de.gwdg.metadataqa.api.util.CsvReader;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -20,10 +22,10 @@ public class CSVRecordReader extends RecordReader {
     private final CSVReader csvReader;
     private final Iterator<String[]> csvIterator;
 
-    public CSVRecordReader(String inputFile, CalculatorFacade calculator) throws IOException, CsvValidationException {
-        super(inputFile, calculator);
+    public CSVRecordReader(BufferedReader inputReader, CalculatorFacade calculator) throws IOException, CsvValidationException {
+        super(inputReader, calculator);
 
-        this.csvReader = new CSVReader(inputReader);
+        this.csvReader = new CSVReader(this.inputReader);
         this.csvIterator = csvReader.iterator();
 
         // read header

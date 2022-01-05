@@ -40,7 +40,7 @@ public class App {
     private static final String MEASUREMENTS_CONFIG = "measurements";
     private static final String HEADERS_CONFIG = "headers";
     private static final String MEASUREMENTS_FORMAT = "measurementsFormat";
-
+    private static final String GZIP_FLAG = "gzip";
 
     private final Schema schema;
     private final CalculatorFacade calculator;
@@ -90,7 +90,7 @@ public class App {
 
         // initialize input
         String inputFile = cmd.getOptionValue(INPUT_FILE);
-        this.inputReader = RecordFactory.getRecordReader(inputFile, calculator);
+        this.inputReader = RecordFactory.getRecordReader(inputFile, calculator, cmd.hasOption(GZIP_FLAG));
 
         // initialize output
         String outFormat = cmd.getOptionValue(OUTPUT_FORMAT, NDJSON);
@@ -159,6 +159,13 @@ public class App {
                 .desc("Headers to copy from source")
                 .build();
 
+        Option gzipOption = Option.builder("z")
+                .numberOfArgs(0)
+                .required(false)
+                .longOpt(GZIP_FLAG)
+                .desc("Flag to indicate that input is gzipped.")
+                .build();
+
         options.addOption(inputOption);
         options.addOption(outputOption);
         options.addOption(outputFormatOption);
@@ -167,6 +174,7 @@ public class App {
         options.addOption(measurementsConfigOption);
         options.addOption(measurementsFormatOption);
         options.addOption(headersOption);
+        options.addOption(gzipOption);
 
         // create the parser
         CommandLineParser parser = new DefaultParser();
