@@ -1,5 +1,13 @@
 package be.meemoo;
 
+import be.meemoo.reader.CSVRecordReader;
+import be.meemoo.reader.JSONRecordReader;
+import be.meemoo.reader.RecordReader;
+import be.meemoo.reader.XMLRecordReader;
+import be.meemoo.writer.CSVJSONResultWriter;
+import be.meemoo.writer.CSVResultWriter;
+import be.meemoo.writer.JSONResultWriter;
+import be.meemoo.writer.ResultWriter;
 import com.opencsv.exceptions.CsvValidationException;
 import de.gwdg.metadataqa.api.calculator.CalculatorFacade;
 import de.gwdg.metadataqa.api.schema.Schema;
@@ -38,6 +46,9 @@ public class RecordFactory {
                 return new CSVRecordReader(inputReader, calculator);
             case JSON:
                 return new JSONRecordReader(inputReader, calculator);
+            case XML:
+                XMLRecordReader reader = new XMLRecordReader(inputReader, calculator);
+                return reader;
         }
         return new CSVRecordReader(inputReader, calculator);
     }
@@ -51,6 +62,7 @@ public class RecordFactory {
         switch (outputFormat) {
             case App.CSV:
                 return new CSVResultWriter(outputFile);
+            case App.JSON:
             case App.NDJSON:
                 return new JSONResultWriter(outputFile);
             case App.CSVJSON:
@@ -71,5 +83,4 @@ public class RecordFactory {
         }
         return new CSVResultWriter();
     }
-
 }

@@ -1,4 +1,4 @@
-package be.meemoo;
+package be.meemoo.writer;
 
 import de.gwdg.metadataqa.api.interfaces.MetricResult;
 import de.gwdg.metadataqa.api.json.JsonUtils;
@@ -19,7 +19,7 @@ public class CSVJSONResultWriter extends CSVResultWriter {
     }
 
     @Override
-    void writeResult(Map<String, List<MetricResult>> result) throws IOException {
+    public void writeResult(Map<String, List<MetricResult>> result) throws IOException {
         Map<String, Object> map = new LinkedHashMap<>();
         for (Map.Entry<String, List<MetricResult>> entry : result.entrySet()) {
             Map<String, Object> calcResult = new LinkedHashMap<>();
@@ -36,7 +36,7 @@ public class CSVJSONResultWriter extends CSVResultWriter {
     }
 
     @Override
-    void writeHeader(List<String> header) throws IOException {
+    public void writeHeader(List<String> header) throws IOException {
         this.csvWriter.writeNext(new String[]{"json_data"});
     }
 }

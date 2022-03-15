@@ -1,15 +1,18 @@
-package be.meemoo;
+package be.meemoo.writer;
 
 import de.gwdg.metadataqa.api.interfaces.MetricResult;
 
-import java.io.*;
+import java.io.BufferedWriter;
+import java.io.Closeable;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
-abstract class ResultWriter implements Closeable {
+public abstract class ResultWriter implements Closeable {
 
     protected final BufferedWriter outputWriter;
 
@@ -28,6 +31,6 @@ abstract class ResultWriter implements Closeable {
         this.outputWriter.close();
     }
 
-    abstract void writeResult(Map<String, List<MetricResult>> result) throws IOException;
-    abstract void writeHeader(List<String> header) throws IOException;
+    public abstract void writeResult(Map<String, List<MetricResult>> result) throws IOException;
+    public abstract void writeHeader(List<String> header) throws IOException;
 }

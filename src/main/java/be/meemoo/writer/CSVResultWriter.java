@@ -1,4 +1,4 @@
-package be.meemoo;
+package be.meemoo.writer;
 
 import com.opencsv.CSVWriter;
 import de.gwdg.metadataqa.api.interfaces.MetricResult;
@@ -26,7 +26,7 @@ public class CSVResultWriter extends ResultWriter{
     }
 
     @Override
-    void writeResult(Map<String, List<MetricResult>> result) throws IOException {
+    public void writeResult(Map<String, List<MetricResult>> result) throws IOException {
         List<String> output = new ArrayList<>();
 
         for (Map.Entry<String, List<MetricResult>> entry : result.entrySet())
@@ -40,7 +40,7 @@ public class CSVResultWriter extends ResultWriter{
     }
 
     @Override
-    void writeHeader(List<String> header) throws IOException {
+    public void writeHeader(List<String> header) throws IOException {
         // Switch headers
         List<String> outputHeader = header.stream()
                 .map(s -> s.replaceAll("(:|/|\\.)", "_")

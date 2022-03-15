@@ -1,4 +1,4 @@
-package be.meemoo;
+package be.meemoo.reader;
 
 import de.gwdg.metadataqa.api.calculator.CalculatorFacade;
 import de.gwdg.metadataqa.api.interfaces.MetricResult;
@@ -6,7 +6,6 @@ import org.apache.commons.io.LineIterator;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 

@@ -1,5 +1,8 @@
 package be.meemoo;
 
+import be.meemoo.reader.RecordReader;
+import be.meemoo.reader.XMLRecordReader;
+import be.meemoo.writer.ResultWriter;
 import com.opencsv.exceptions.CsvValidationException;
 import de.gwdg.metadataqa.api.calculator.CalculatorFacade;
 import de.gwdg.metadataqa.api.configuration.ConfigurationReader;
@@ -8,15 +11,12 @@ import de.gwdg.metadataqa.api.interfaces.MetricResult;
 import de.gwdg.metadataqa.api.schema.Schema;
 import org.apache.commons.cli.*;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
 import java.util.*;
 import java.util.logging.Logger;
 
-
-/**
- * Hello world!
- */
 public class App {
 
     private static final Logger logger = Logger.getLogger(App.class.getCanonicalName());
@@ -41,11 +41,13 @@ public class App {
     private static final String HEADERS_CONFIG = "headers";
     private static final String MEASUREMENTS_FORMAT = "measurementsFormat";
     private static final String GZIP_FLAG = "gzip";
+    private static final String RECORD_ADDRESS = "recordAddress";
 
     private final Schema schema;
     private final CalculatorFacade calculator;
     private final ResultWriter outputWriter;
     private final RecordReader inputReader;
+    private final String recordAddress;
 
     public App(CommandLine cmd) throws IOException, CsvValidationException {
         // initialize schema
@@ -98,6 +100,12 @@ public class App {
         this.outputWriter = cmd.hasOption(OUTPUT_FILE)
                           ? RecordFactory.getResultWriter(outFormat, cmd.getOptionValue(OUTPUT_FILE))
                           : RecordFactory.getResultWriter(outFormat);
+
+        this.recordAddress = (cmd.hasOption(RECORD_ADDRESS) && StringUtils.isNotBlank(cmd.getOptionValue(RECORD_ADDRESS)))
+                           ? cmd.getOptionValue(RECORD_ADDRESS)
+                           : null;
+        if (inputReader instanceof XMLRecordReader && recordAddress != null)
+            ((XMLRecordReader)inputReader).setRecordAddress(this.recordAddress);
     }
 
     public static void main(String[] args) {
@@ -123,7 +131,7 @@ public class App {
                 .numberOfArgs(1)
                 .required(false)
                 .longOpt(OUTPUT_FORMAT)
-                .desc("Format of the output: ndjson, csv, csvjson (json encoded in csv; useful for RDB bulk loading). Default: ndjson.")
+                .desc("Format of the output: json, ndjson (new line delimited JSON), csv, csvjson (json encoded in csv; useful for RDB bulk loading). Default: ndjson.")
                 .build();
 
         Option schemaConfigOption = Option.builder("s")
@@ -168,6 +176,13 @@ public class App {
                 .desc("Flag to indicate that input is gzipped.")
                 .build();
 
+        Option recordAddressOption = Option.builder("r")
+                .numberOfArgs(1)
+                .required(false)
+                .longOpt(RECORD_ADDRESS)
+                .desc("An XPath or JSONPath expression to separate individual records in an XML or JSON files.")
+                .build();
+
         options.addOption(inputOption);
         options.addOption(outputOption);
         options.addOption(outputFormatOption);
@@ -177,6 +192,7 @@ public class App {
         options.addOption(measurementsFormatOption);
         options.addOption(headersOption);
         options.addOption(gzipOption);
+        options.addOption(recordAddressOption);
 
         // create the parser
         CommandLineParser parser = new DefaultParser();
@@ -226,7 +242,4 @@ public class App {
             logger.severe(e.getMessage());
         }
     }
-
-
 }
-
