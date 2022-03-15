@@ -25,10 +25,10 @@ records and output quality assessment results using various metrics.
  -r,--recordAddress <arg>        An XPath or JSONPath expression to separate individual records
                                  in an XML or JSON files.
  -s,--schema <arg>               Schema file to run assessment against.
- -v,--schemaFormat <arg>         Format of schema file: json, yaml. Default: based on file extension,
-                                 else json.
- -w,--measurementsFormat <arg>   Format of measurements config file: json, yaml. Default: based on 
-                                 file extension, else json.
+ -v,--schemaFormat <arg>         Format of schema file: json, yaml. Default: based on file
+                                 extension, else json.
+ -w,--measurementsFormat <arg>   Format of measurements config file: json, yaml. Default: based 
+                                 on file extension, else json.
  -z,--gzip                       Flag to indicate that input is gzipped.
 ```
 
