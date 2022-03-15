@@ -95,7 +95,9 @@ public class App {
         // initialize output
         String outFormat = cmd.getOptionValue(OUTPUT_FORMAT, NDJSON);
         // write to std out if no file was given
-        this.outputWriter = cmd.hasOption(OUTPUT_FILE) ? RecordFactory.getResultWriter(outFormat, cmd.getOptionValue(OUTPUT_FILE)) : RecordFactory.getResultWriter(outFormat);
+        this.outputWriter = cmd.hasOption(OUTPUT_FILE)
+                          ? RecordFactory.getResultWriter(outFormat, cmd.getOptionValue(OUTPUT_FILE))
+                          : RecordFactory.getResultWriter(outFormat);
     }
 
     public static void main(String[] args) {
